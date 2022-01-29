@@ -2,20 +2,19 @@ import { nanoid }  from 'nanoid'
 
 export default class PostMessageSocket {
 	socketId;
-	messenger;
+	currentWindow;
 	target;
 	listeners;
 	msgIdGenerator;
 
-	constructor(messenger, target, options = {}) {		
+	constructor(currentWindow, targetWindow, options = {}) {		
 		this.socketId = nanoid();
-		this.messenger = messenger;
-		this.target = target;		
-		this.listeners = {}
+		this.currentWindow = currentWindow;
+		this.targetWindow = targetWindow;		
+		this.listeners   = {}
 
 		this.msgIdGenerator = this.#msgIdGenerator();
-
-		this.messenger.addEventListener("message", this.onMessage.bind(this));
+		this.currentWindow.addEventListener("message", this.onMessage.bind(this));
 	}
 
 	addListener(type, callback, { once = false } = {}) {
@@ -27,25 +26,22 @@ export default class PostMessageSocket {
 	}
 
 	send(type, payload) {
-		console.log(type);
-		this.target.postMessage(JSON.stringify({ type, payload }), "*");
-		
+		this.targetWindow.postMessage(JSON.stringify({ type, payload }), "*");	
 	}
 
 	request(type, payload) {		
 		const msgId = this.#getNextMsgId();
-		console.log(msgId);
-		this.target.postMessage(JSON.stringify({ type, payload, msgId }), "*");
+		this.targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
 	
 		return new Promise((resolve, reject) => {			
 			const waitForResponse = (event) => {
-				if (event.source !== this.target) return;
+				if (event.source !== this.targetWindow) return;
 				
 				try {
 					const response = JSON.parse(event.data);				
 					if (response.msgId !== msgId) return;
 					
-					this.messenger.removeEventListener("message", waitForResponse);
+					this.currentWindow.removeEventListener("message", waitForResponse);
 					
 					if (response.error) {
 						reject(new Error(response.error));
@@ -53,19 +49,19 @@ export default class PostMessageSocket {
 						resolve(response.payload);
 					}
 				} catch (e) {
-					window.removeEventListener("message", waitForResponse);
+					this.currentWindow.removeEventListener("message", waitForResponse);
 					reject(e);
 				}
 			}
-			this.messenger.addEventListener("message", waitForResponse);
+			this.currentWindow.addEventListener("message", waitForResponse.bind(this));
 		});
 	}
 
 	async onMessage(event) {
-		console.log(event);
-		if (event.source !== this.target) return;		
+		if (event.source !== this.targetWindow) return;
 		const message = this.#tryParse(event);
-		if (!message) return;		
+		if (!message) return;
+
 		const listener = this.listeners[message.type];
 		if (!listener) return;
 		
@@ -81,7 +77,7 @@ export default class PostMessageSocket {
 			}
 	
 			if (event.source) {
-				this.target.postMessage(JSON.stringify(response), "*");
+				this.targetWindow.postMessage(JSON.stringify(response), "*");
 			}
 		}
 
