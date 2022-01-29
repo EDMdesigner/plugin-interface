@@ -1,8 +1,8 @@
-import CreateIframeSocket from "./createContentWindowSocket.js";
+import PostMessageSocket from "./postMessageSocket.js";
 
 export default function providePlugin({ settings = {}, hooks = [], methods = {} }) {
 	return new Promise((resolve) => {
-		const socket = new CreateIframeSocket(window, window.parent);
+		const socket = new PostMessageSocket(window, window.parent);
 
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", sendDomReady);

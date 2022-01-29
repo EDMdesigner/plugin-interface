@@ -1,8 +1,7 @@
-import CreateIframeSocket from "./createContentWindowSocket.js";
+import PostMessageSocket from "./postMessageSocket.js";
 
 function validateConfig({ settings, hooks }, config) {
     // settings validation is quite hard, we would need a full-fledged json/object-tree validation
-
 }
 
 export default function initPlugin({ container, src, data = {}, settings = {}, hooks = {} }, { timeout = 5000, beforeInit } = {}) {
@@ -16,7 +15,7 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
 
 	container.appendChild(pluginIframe);
 
-    const socket = new CreateIframeSocket(window, pluginIframe.contentWindow);
+    const socket = new PostMessageSocket(window,  pluginIframe.contentWindow);
 
     return new Promise((resolve, reject) => {
         socket.addListener("domReady", onDomReady, { once: true });

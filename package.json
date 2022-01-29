@@ -1,17 +1,23 @@
 {
-  "name": "plugin-interface",
-  "version": "0.0.0",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "devDependencies": {
-    "vite": "^2.7.2",
-	"jest": "^27.4.7"
-  },
-  "dependencies": {
-    "jest": "^27.4.7",
-    "nanoid": "^3.2.0"
-  }
+	"name": "plugin-interface",
+	"version": "0.0.0",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview",
+		"test": "jest --watch"
+	},
+	"devDependencies": {
+		"@EDMdesigner/eslint-config-edmdesigner": "^2.1.1",
+		"jest": "^27.4.7",
+		"vite": "^2.7.2",
+		"@babel/core": "^7.16.12",
+		"@babel/preset-env": "^7.16.11",
+		"babel-jest": "^27.4.6",
+		"regenerator-runtime": "^0.13.9",
+		"jsdom": "^19.0.0"
+	},
+	"dependencies": {
+		"nanoid": "^3.2.0"
+	}
 }
