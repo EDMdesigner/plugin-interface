@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <title>Edit content example</title>
+    </head>
+    <body>
+        <h1>Edit content example</h1>
+        <div>Title:</div>
+        <div id="title"></div>
+        <div>Description:</div>
+        <div id="description"></div>
+        <button id="editButton">Edit</button>
+        <script>
+            (async function() {
+                const initExampleSdk = (await import("./initExampleSdk.js")).default;
+                const sdk = await initExampleSdk({
+                    settings: {
+                        splashScreenUrl: "https://chamaileon-sdk.github.io/splashscreen-and-logo-examples/splashScreen.html"
+                    }
+                });
+
+                const data = {
+                    title: "Default title",
+                    description: "Default descript ion"
+                };
+
+                function updateData(newData) {
+                    data.title = newData.title;
+                    data.description = newData.description;
+
+                    document.getElementById("title").innerHTML = data.title;
+                    document.getElementById("description").innerHTML = data.description;
+                }
+
+                updateData(data);
+
+                const contentEditorPlugin = await sdk.initContentEditorPlugin({
+                    data,
+                    settings: { background: "#abcdef"},
+                    hooks: {
+                        onResetButtonClicked: async () => {
+                            return data;
+                        },
+                        onSaveButtonClicked: async (newData) => {
+                            updateData(newData);
+                            contentEditorPlugin.hide();
+                        },
+                        onClose: async () => {
+                            contentEditorPlugin.hide();
+                        }
+                    }
+                });
+
+                document.getElementById("editButton").onclick = async () => {
+                    contentEditorPlugin.showSplashScreen();
+                    await contentEditorPlugin.methods.updateData(data);
+                    contentEditorPlugin.show();
+                    await new Promise(resolve => setTimeout(resolve, 8000)); // simulate latency
+                    contentEditorPlugin.hideSplashScreen();
+                }
+            }());
+        </script>
+    </body>
+</html>

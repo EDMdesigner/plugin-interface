@@ -1,0 +1,89 @@
+<html>
+    <head>
+        <title>Inline ad example</title>
+    </head>
+    <body>
+        <h1>Inline ad plugin example</h1>
+        <div id="ad-container"></div>
+        <button id="bgChangeButton">Force Red Bg</button>
+        <script>
+            (async function() {
+                const initExampleSdk = (await import("./initExampleSdk.js")).default;
+
+                const container = document.getElementById("ad-container");
+
+                const ads = [
+                    {
+                        id: 1,
+                        title: "Ad1",
+                        shortDescription: "This is an awesome product.",
+                        longDescription: "This is an awesome product. Really.",
+                        background: "#abcdef"
+                    },
+                    {
+                        id: 2,
+                        title: "Ad2",
+                        shortDescription: "This is an awesome product. 2",
+                        longDescription: "This is an awesome product. Really. 2",
+                        background: "#cdefab"
+                    },
+                    {
+                        id: 3,
+                        title: "Ad3",
+                        shortDescription: "This is an awesome product. 3",
+                        longDescription: "This is an awesome product. Really. 3",
+                        background: "#efabcd"
+                    }
+                ];
+
+                let adIdx = 0;
+                function getNextAd(long) {
+                    const ad = ads[adIdx % ads.length];
+                    adIdx += 1;
+
+                    return {
+                        id: ad.id,
+                        title: ad.title,
+                        description: ad.shortDescription,
+                        background: ad.background
+                    };
+                }
+
+            
+                const sdk = await initExampleSdk();
+
+                const data = getNextAd();
+                const settings = { background: data.background };
+                const adPlugin = await sdk.initInlineAdPlugin({ container, data, settings, hooks: {
+                    onNextButtonClicked: async () => {
+                        //await new Promise(resolve => setTimeout(resolve, 500)); // simulate latency
+
+                        const randAd = getNextAd();
+                        adPlugin.methods.updateSettings({ background: randAd.background });
+                        return randAd;
+                    },
+                    onReadMoreButtonClicked: async ({ id }) => {
+                        const ad = ads.find(ad => ad.id === id);
+                        return {
+                            id: ad.id,
+                            title: ad.title,
+                            description: ad.longDescription
+                        };
+                    },
+                    onClose: async () => {
+                        adPlugin.destroy();
+                    }
+                }}, {
+                    beforeInit: ({ iframe }) => {
+                        iframe.style.width = "200px";
+                        iframe.style.height = "200px";
+                    }
+                });
+
+                document.getElementById("bgChangeButton").onclick = () => {
+                    adPlugin.methods.updateSettings({ background: "red" });
+                };
+            }())
+        </script>
+    </body>
+</html>

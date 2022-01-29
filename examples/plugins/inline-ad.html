@@ -1,0 +1,77 @@
+<html>
+    <head>
+        <title>Inline AD example</title>
+    </head>
+    <body>
+        <h1 id="title"></h1>
+        <p id="description"></p>
+        <button id="readMoreButton">Read more</button>
+        <button id="nextButton">Next</button>
+        <button id="closeButton">I don't wanna see ads anymore.</button>
+        <script>
+            (async function() {
+                const providePlugin = (await import("../../src/providePlugin.js")).default;
+
+                const data = {
+                    id: "default id",
+                    title: "Default title",
+                    description: "Default description"
+                };
+
+                const settings = {
+                    background: "#abcdef"
+                };
+
+                function updateData(newData) {
+                    data.id = newData.id;
+                    data.title = newData.title;
+                    data.description = newData.description;
+
+                    document.getElementById("title").innerHTML = data.title;
+                    document.getElementById("description").innerHTML = data.description;
+                }
+
+                function updateSettings(newSettings) {
+                    settings.background = newSettings.background;
+
+                    document.body.style.background = settings.background;
+                }
+
+            
+                const iface = await providePlugin({
+                    settings,
+                    hooks: ["onNextButtonClicked", "onReadMoreButtonClicked", "onClose"],
+                    methods: {
+                        updateData,
+                        updateSettings
+                    }
+                });
+
+                updateData(iface.data);
+                updateSettings(iface.settings);
+
+                document.getElementById("readMoreButton").onclick = async () => {
+                    const response = await iface.hooks.onReadMoreButtonClicked({ id: data.id });
+
+                    updateData({
+                        ...data,
+                        description: response.description
+                    })
+                };
+
+                document.getElementById("nextButton").onclick = async () => {
+                    const response = await iface.hooks.onNextButtonClicked();
+
+                    updateData({
+                        ...data,
+                        ...response
+                    })
+                };
+
+                document.getElementById("closeButton").onclick = async () => {
+                    iface.hooks.onClose();
+                };
+            }());
+        </script>
+    </body>
+</html>

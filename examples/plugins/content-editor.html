@@ -1,0 +1,75 @@
+<html>
+    <head>
+        <title>Inline AD example</title>
+    </head>
+    <body>
+        <div>Title:</div>
+        <input type="text" id="title" />
+        <div>Description:</div>
+        <input type="text" id="description"/>
+        <button id="resetButton">Reset</button>
+        <button id="saveButton">Save</button>
+        <button id="closeButton">Close (cancel)</button>
+        <script>
+            (async function() {
+                const providePlugin = (await import("../../src/providePlugin.js")).default;
+
+                const data = {
+                    title: "Default title",
+                    description: "Default description"
+                };
+
+                const settings = {
+                    background: "#abcdef"
+                };
+
+                function updateData(newData) {
+                    data.title = newData.title;
+                    data.description = newData.description;
+
+                    document.getElementById("title").value = data.title;
+                    document.getElementById("description").value = data.description;
+                }
+
+                function updateSettings(newSettings) {
+                    settings.background = newSettings.background;
+
+                    document.body.style.background = settings.background;
+                }
+
+            
+                const iface = await providePlugin({
+                    settings,
+                    hooks: ["onResetButtonClicked", "onSaveButtonClicked", "onClose"],
+                    methods: {
+                        updateData,
+                        updateSettings
+                    }
+                });
+
+                updateData(iface.data);
+                updateSettings(iface.settings);
+
+                document.getElementById("resetButton").onclick = async () => {
+                    const response = await iface.hooks.onResetButtonClicked();
+
+                    updateData({
+                        ...data,
+                        title: response.title,
+                        description: response.description
+                    })
+                };
+
+                document.getElementById("saveButton").onclick = async () => {
+                    data.title = document.getElementById("title").value;
+                    data.description = document.getElementById("description").value;
+                    await iface.hooks.onSaveButtonClicked(data);
+                };
+
+                document.getElementById("closeButton").onclick = async () => {
+                    iface.hooks.onClose();
+                };
+            }());
+        </script>
+    </body>
+</html>
