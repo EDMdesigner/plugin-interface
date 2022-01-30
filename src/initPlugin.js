@@ -23,7 +23,7 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
         async function onDomReady(payload) {
 			
             validateConfig({ settings, hooks }, payload.config)
-            await socket.request("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
+            await socket.sendSignal("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
             listenForRequests();
 
             const methodNames = payload.config.methods;
@@ -36,7 +36,7 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
                             throw new Error(`Naughty boy! Don't request ${type}!`);
                         }
 
-                        return socket.request(methodName, payload);
+                        return socket.sendSignal(methodName, payload);
                     }
                 }
             }, {})

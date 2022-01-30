@@ -11,7 +11,7 @@ export default class PostMessageSocket {
 		// TODO: check if the parameters are windowObjects???? and return if not!
 		// TODO: figure out if we need options.window
 
-		this.socketId = nanoid();
+		this.socketId = nanoid(8);
 		this.currentWindow = currentWindow;
 		this.targetWindow = targetWindow;		
 		this.listeners = {};
@@ -28,6 +28,7 @@ export default class PostMessageSocket {
 
 	sendSignal(type, payload) {		
 		const msgId = this.#getNextMsgId();
+		console.log("msdid: " + msgId)
 		this.targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
 	
 		return new Promise((resolve, reject) => {			
@@ -61,8 +62,6 @@ export default class PostMessageSocket {
 			};
 		}
 		this.msgIdGenerator = msgIdGenerator.call(this);
-
-
 		this.currentWindow.addEventListener("message", this.#onMessage.bind(this));
 	}
 

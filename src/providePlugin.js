@@ -15,7 +15,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 		async function sendDomReady() {
 			// await new Promise(resolve => setTimeout(resolve, 500));
 
-			socket.send("domReady", {
+			socket.sendMessage("domReady", {
 				config: {
 					settings,
 					hooks,
@@ -39,7 +39,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 							throw new Error(`The following hook is not configured: ${hookName}`)
 						}
 	
-						return socket.request(hookName, payload);
+						return socket.sendSignal(hookName, payload);
 					}
 				}
 			}, {})
