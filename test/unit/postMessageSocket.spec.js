@@ -49,12 +49,8 @@ describe("postMessageSocket",() => {
 
 
 	})
-	
-	it("can add listeners to the Sockets", async () => {
-		console.log("test 2 is running")
 
-		expect(windowSocket.currentWindow).toBe(window);
-		expect(iframeSocket.currentWindow).toBe(pluginIframe.contentWindow);
+	it("can add eventlisteners to the sockets", function() {
 
 		const cb = (data) => messages.push(data);
 
@@ -67,7 +63,12 @@ describe("postMessageSocket",() => {
 		expect(!!windowSocket.listeners.test).toBe(true);
 		expect(!!iframeSocket.listeners.test).toBe(true);
 
+	})
+	
+	it("can sendMessage to partner trough the socket and the eventlistener delete itself", async function() {	
 
+		expect(windowSocket.currentWindow).toBe(window);
+		expect(iframeSocket.currentWindow).toBe(pluginIframe.contentWindow);
 		windowSocket.sendMessage("test", "window socket sending");
 		iframeSocket.sendMessage("test", "iframeSocket socket sending");
 		
