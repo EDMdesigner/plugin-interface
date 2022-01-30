@@ -11,7 +11,7 @@ export default class PostMessageSocket {
 		this.socketId = nanoid();
 		this.currentWindow = currentWindow;
 		this.targetWindow = targetWindow;		
-		this.listeners = {}
+		this.listeners = {};
 
 		this.msgIdGenerator = this.#msgIdGenerator();
 		this.currentWindow.addEventListener("message", this.onMessage.bind(this));
