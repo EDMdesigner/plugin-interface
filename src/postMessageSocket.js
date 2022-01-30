@@ -7,14 +7,15 @@ export default class PostMessageSocket {
 	listeners;
 	msgIdGenerator;
 
-	constructor(currentWindow, targetWindow, options = {}) {		
+	constructor(currentWindow, targetWindow, options = {}) {
+		// TODO: check if the parameters are windowObjects???? and return if not!
+		// TODO: figure out if we need options.window
+
 		this.socketId = nanoid();
 		this.currentWindow = currentWindow;
 		this.targetWindow = targetWindow;		
 		this.listeners = {};
-
-		this.msgIdGenerator = this.#msgIdGenerator();
-		this.currentWindow.addEventListener("message", this.onMessage.bind(this));
+		this.#setupSocket();
 	}
 
 	addListener(type, callback, { once = false } = {}) {
@@ -44,16 +45,28 @@ export default class PostMessageSocket {
 					} else {
 						resolve(response.payload);
 					}
-				} catch (e) {
+				} catch (error) {
 					this.currentWindow.removeEventListener("message", waitForResponse);
-					reject(e);
+					reject(new Error(error));
 				}
 			}
 			this.currentWindow.addEventListener("message", waitForResponse.bind(this));
-		});
+		}); 
 	}
 
-	async onMessage(event) {
+	#setupSocket() {
+		function* msgIdGenerator() {
+			while(true) {
+				yield `${this.socketId}-${nanoid(6)}-${new Date().getTime()}`;
+			};
+		}
+		this.msgIdGenerator = msgIdGenerator.call(this);
+
+
+		this.currentWindow.addEventListener("message", this.#onMessage.bind(this));
+	}
+
+	async #onMessage(event) {
 		if (event.source !== this.targetWindow) return;
 		const message = this.#tryParse(event);
 		if (!message) return;
@@ -62,6 +75,7 @@ export default class PostMessageSocket {
 		if (!listener) return;
 		
 		const respond = ({ error, payload }) => {
+
 			const response = { msgId: message.msgId };
 	
 			if (typeof error === "string") {
@@ -97,12 +111,6 @@ export default class PostMessageSocket {
 			return JSON.parse(event.data);
 		} catch (err) {}
 	}	
-
-	*#msgIdGenerator() {
-		while(true) {
-			yield `${this.socketId}-${nanoid(6)}-${new Date().getTime()}`;
-		};
-	}
 	
 	#getNextMsgId() {
 		return this.msgIdGenerator.next().value;
