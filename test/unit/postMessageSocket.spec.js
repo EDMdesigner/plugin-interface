@@ -22,6 +22,7 @@ describe("postMessageSocket",() => {
 	let windowSocket;
 	let iframeSocket;
 	let body;
+	const messageCallback = (data) => messages.push(data);
 
 	beforeAll(function () {
 		pluginIframe = document.createElement("iframe");
@@ -41,49 +42,43 @@ describe("postMessageSocket",() => {
 	it("can create PostMessage sockets on window and Iframe.contentWindow", function () {
 		expect(windowSocket.currentWindow).toBe(window);
 		expect(windowSocket.targetWindow).toBe(pluginIframe.contentWindow);
-		expect(typeof windowSocket.socketId).toBe("string");
-		
+		expect(typeof windowSocket.socketId).toBe("string");		
 		expect(iframeSocket.currentWindow).toBe(pluginIframe.contentWindow);
 		expect(iframeSocket.targetWindow).toBe(window);
 		expect(typeof iframeSocket.socketId).toBe("string");
-
-
 	})
 
 	it("can add eventlisteners to the sockets", function() {
-
-		const cb = (data) => messages.push(data);
-
 		expect(!!windowSocket.listeners.test).toBe(false);
 		expect(!!iframeSocket.listeners.test).toBe(false);
 
-		windowSocket.addListener("test", cb, {once: true});
-		iframeSocket.addListener("test", cb, {once: true});
+		windowSocket.addListener("test", messageCallback, {once: true});
+		iframeSocket.addListener("test", messageCallback, {once: true});
 		
 		expect(!!windowSocket.listeners.test).toBe(true);
 		expect(!!iframeSocket.listeners.test).toBe(true);
-
 	})
 	
-	it("can sendMessage to partner trough the socket and the eventlistener delete itself", async function() {	
+	it("can sendMessage to partner trough the socket", async function() {
+		const messageOne = "This is the first message";
+		const messageTwo = "This is the second message";
 
-		expect(windowSocket.currentWindow).toBe(window);
-		expect(iframeSocket.currentWindow).toBe(pluginIframe.contentWindow);
-		windowSocket.sendMessage("test", "window socket sending");
-		iframeSocket.sendMessage("test", "iframeSocket socket sending");
-		
+		windowSocket.sendMessage("test", messageOne);
+		iframeSocket.sendMessage("test", messageTwo);		
 		// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
 		await new Promise(resolve => setTimeout(resolve, 100));
 		
-
 		expect(!!iframeSocket.listeners.test).toBe(false);
-		expect(!!windowSocket.listeners.test).toBe(false);
-		
+		expect(!!windowSocket.listeners.test).toBe(false);		
 		expect(messages.length).toBe(2);
-
-		expect(!!iframeSocket.listeners.test).toBe(false);
-		expect(!!windowSocket.listeners.test).toBe(false);
+		expect(messages[0]).toBe(messageOne);
+		expect(messages[1]).toBe(messageTwo);
 
 	});
+
+	it("the eventlistener set up with parameter once is deleted after a message", function() {
+		expect(!!iframeSocket.listeners.test).toBe(false);
+		expect(!!windowSocket.listeners.test).toBe(false);
+	})
 	
 });
