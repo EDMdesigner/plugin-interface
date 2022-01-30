@@ -32,6 +32,7 @@ describe("postMessageSocket",() => {
 	let body;
 
 	const messageCallback = (data) => messages.push(data);
+
 	const testWindowSocketOnce = "testWindowSocketOnce";
 	const testiframeSocketSocketOnce = "testiframeSocketSocketOnce"
 	const testWindowSocket = "testWindowSocket";
@@ -118,6 +119,8 @@ describe("postMessageSocket",() => {
 		expect(!!windowSocket.listeners.testWindowSocket).toBe(true);
 		expect(!!iframeSocket.listeners.testiframeSocketSocket).toBe(true);
 	})
+
+	it.todo("can set up hook");
 
 	it("with a NOT matching message type the callback is not fired", async function() {
 		windowSocket.sendSignal("wrong msg type", messageOne);

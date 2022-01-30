@@ -28,7 +28,6 @@ export default class PostMessageSocket {
 
 	sendSignal(type, payload) {		
 		const msgId = this.#getNextMsgId();
-		console.log("msdid: " + msgId)
 		this.targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
 	
 		return new Promise((resolve, reject) => {			
