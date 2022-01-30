@@ -21,13 +21,13 @@ describe("postMessageSocket",() => {
 	let messages = [];
 	let windowSocket;
 	let iframeSocket;
+	let body;
 
-	beforeEach(() => {
-		window.innerHTML = "";
+	beforeAll(function () {
 		pluginIframe = document.createElement("iframe");
 		pluginIframe.src = "";
 		pluginIframe.allowFullscreen = "allowfullscreen";
-		const body = document.querySelector("body");
+		body = document.querySelector("body");
 		body.appendChild(pluginIframe);
 
 		windowSocket = new PostMessageSocket(window, pluginIframe.contentWindow);
@@ -38,8 +38,20 @@ describe("postMessageSocket",() => {
 	});
 
 	
+	it("can create PostMessage sockets on window and Iframe.contentWindow", function () {
+		expect(windowSocket.currentWindow).toBe(window);
+		expect(windowSocket.targetWindow).toBe(pluginIframe.contentWindow);
+		expect(typeof windowSocket.socketId).toBe("string");
+		
+		expect(iframeSocket.currentWindow).toBe(pluginIframe.contentWindow);
+		expect(iframeSocket.targetWindow).toBe(window);
+		expect(typeof iframeSocket.socketId).toBe("string");
+
+
+	})
 	
 	it("can add listeners to the Sockets", async () => {
+		console.log("test 2 is running")
 
 		expect(windowSocket.currentWindow).toBe(window);
 		expect(iframeSocket.currentWindow).toBe(pluginIframe.contentWindow);
@@ -56,8 +68,8 @@ describe("postMessageSocket",() => {
 		expect(!!iframeSocket.listeners.test).toBe(true);
 
 
-		windowSocket.send("test", "window socket sending");
-		iframeSocket.send("test", "iframeSocket socket sending");
+		windowSocket.sendMessage("test", "window socket sending");
+		iframeSocket.sendMessage("test", "iframeSocket socket sending");
 		
 		// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
 		await new Promise(resolve => setTimeout(resolve, 100));

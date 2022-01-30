@@ -11,7 +11,7 @@ export default class PostMessageSocket {
 		this.socketId = nanoid();
 		this.currentWindow = currentWindow;
 		this.targetWindow = targetWindow;		
-		this.listeners   = {}
+		this.listeners = {}
 
 		this.msgIdGenerator = this.#msgIdGenerator();
 		this.currentWindow.addEventListener("message", this.onMessage.bind(this));
@@ -21,15 +21,11 @@ export default class PostMessageSocket {
 		this.listeners[type] = { callback, once };
 	}
 
-	removeListener(type) {
-		delete listeners[type];
-	}
-
-	send(type, payload) {
+	sendMessage(type, payload) {
 		this.targetWindow.postMessage(JSON.stringify({ type, payload }), "*");	
 	}
 
-	request(type, payload) {		
+	sendSignal(type, payload) {		
 		const msgId = this.#getNextMsgId();
 		this.targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
 	
@@ -88,8 +84,12 @@ export default class PostMessageSocket {
 		}
 
 		if (listener.once) {
-			delete this.listeners[message.type];
+			this.#removeListener(message.type)
 		}
+	}
+
+	#removeListener(type) {
+		delete this.listeners[type];
 	}
 
 	#tryParse(event) {
