@@ -1,11 +1,13 @@
 import PostMessageSocket from "./postMessageSocket.js";
 
-export default function providePlugin({ settings = {}, hooks = [], methods = {} }, socket = null) {
+export default function providePlugin({ settings = {}, hooks = [], methods = {} }, _socket = null) {
 	return new Promise((resolve) => {
-		let _socket = socket;
+		let socket = _socket;
 		if (!socket) {
-			_socket = new PostMessageSocket(window, window.parent);
+			socket = new PostMessageSocket(window, window.parent);
 		}
+
+		socket.addListener("init", onInit, { once: true });
 
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", sendDomReady);
@@ -13,13 +15,10 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 			sendDomReady();
 		}
 
-		_socket.addListener("init", onInit, { once: true });
-
-		// eslint-disable-next-line require-await
 		async function sendDomReady() {
 			// await new Promise(resolve => setTimeout(resolve, 500));
 
-			_socket.sendMessage("domReady", {
+			socket.sendMessage("domReady", {
 				config: {
 					settings,
 					hooks,
@@ -31,21 +30,21 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 		}
 
 		async function onInit(config) {
+			console.log("INSIDE INIIIIIIIIIIIT");
+
 			listenForRequests();
 
-			// eslint-disable-next-line no-shadow
 			await new Promise(resolve => setTimeout(resolve, 500));
 
-			const hookFunctions = hooks.reduce((hook, hookName) => {
+			const hookFunctions = hooks.reduce((hooks, hookName) => {
 				return {
-					...hook,
-					// eslint-disable-next-line require-await
+					...hooks,
 					[hookName]: async (payload) => {
 						if (!config.hooks.includes(hookName)) {
 							throw new Error(`The following hook is not configured: ${hookName}`);
 						}
 
-						return _socket.sendRequest(hookName, payload);
+						return socket.sendSignal(hookName, payload);
 					},
 				};
 			}, {});
@@ -57,10 +56,9 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 			});
 		}
 
-		// eslint-disable-next-line require-await
 		async function listenForRequests() {
 			Object.keys(methods).forEach((methodName) => {
-				_socket.addListener(methodName, payload => methods[methodName](payload));
+				socket.addListener(methodName, payload => methods[methodName](payload));
 			});
 		}
 	});
