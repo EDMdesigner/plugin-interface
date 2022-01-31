@@ -40,6 +40,7 @@ export default class PostMessageSocket {
 	}
 
 	#removeListener(type) {
+		// TODO: also delete the listener from the #appliedEventListners = [];
 		delete this.#listeners[type];
 	}
 
