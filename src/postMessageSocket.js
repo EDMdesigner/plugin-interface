@@ -1,5 +1,3 @@
-import { nanoid } from "nanoid";
-
 export default class PostMessageSocket {
 	#currentWindow;
 
@@ -64,8 +62,9 @@ export default class PostMessageSocket {
 
 	#setupSocket() {
 		function* msgIdGenerator() {
+			let msgId;
 			while (true) {
-				yield `${this.socketId}-${nanoid(6)}-${new Date().getTime()}`;
+				yield `${msgId++}-${new Date().getTime()}`;
 			}
 		}
 		this.#msgIdGenerator = msgIdGenerator.call(this);
