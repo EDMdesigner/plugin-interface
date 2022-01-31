@@ -47,7 +47,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 							throw new Error(`The following hook is not configured: ${hookName}`);
 						}
 
-						return socket.sendSignal(hookName, payload);
+						return socket.sendRequest(hookName, payload);
 					},
 				};
 			}, {});
