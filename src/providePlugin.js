@@ -1,17 +1,21 @@
 import PostMessageSocket from "./postMessageSocket.js";
 
-export default function providePlugin({ settings = {}, hooks = [], methods = {} }) {
+export default function providePlugin({ settings = {}, hooks = [], methods = {} }, _socket = null) {
 	return new Promise((resolve) => {
-		const socket = new PostMessageSocket(window, window.parent);
+		let socket = _socket;
+		if (!socket) {
+			socket = new PostMessageSocket(window, window.parent);
+		}
+
+		socket.addListener("init", onInit, { once: true });
 
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", sendDomReady);
 		} else {
 			sendDomReady();
 		}
-		
-		socket.addListener("init", onInit, { once: true });
-		
+
+
 		async function sendDomReady() {
 			// await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -27,6 +31,8 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 		}
 
 		async function onInit(config) {
+            console.log("INSIDE INIIIIIIIIIIIT")
+
 			listenForRequests();
 
 			await new Promise(resolve => setTimeout(resolve, 500));
