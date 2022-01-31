@@ -23,7 +23,8 @@ export default class PostMessageSocket {
 	}
 
 	sendMessage(type, payload) {
-		this.targetWindow.postMessage(JSON.stringify({ type, payload }), "*");	
+		const msgId = this.#getNextMsgId();
+		this.targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");	
 	}
 
 	sendSignal(type, payload) {		
@@ -52,6 +53,10 @@ export default class PostMessageSocket {
 			}
 			this.currentWindow.addEventListener("message", waitForResponse.bind(this));
 		}); 
+	}
+
+	terminate() {
+		// TODO: finish this!
 	}
 
 	#setupSocket() {

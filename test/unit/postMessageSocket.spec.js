@@ -54,7 +54,6 @@ describe("postMessageSocket",() => {
 		addFixEvents(pluginIframe.contentWindow, window)
 	});
 
-	
 	it("can create PostMessage sockets on window and Iframe.contentWindow", function () {
 		expect(windowSocket.currentWindow).toBe(window);
 		expect(windowSocket.targetWindow).toBe(pluginIframe.contentWindow);
@@ -84,14 +83,12 @@ describe("postMessageSocket",() => {
 		expect(messages.length).toBe(2);
 		expect(messages[0]).toBe(messageOne);
 		expect(messages[1]).toBe(messageTwo);
-
 	});
 
 	it("the eventlistener set up with parameter once is deleted after a message", function() {
 		expect(!!windowSocket.listeners.testWindowSocketOnce).toBe(false);
 		expect(!!iframeSocket.listeners.testiframeSocketSocketOnce).toBe(false);
 	})
-
 
 	it("can add permanent eventlisteners to sockets", function() {
 		expect(!!windowSocket.listeners.testWindowSocket).toBe(false);
@@ -130,7 +127,7 @@ describe("postMessageSocket",() => {
 		expect(messages.length).toBe(4);
 	})
 
-	it("other windowObjects cant send msg", async function() {
+	it("other windowObjects can not send msg", async function() {
 		removeFixEvents(window);
 		removeFixEvents(pluginIframe.contentWindow);
 		addFixEvents(window, window);
@@ -146,5 +143,4 @@ describe("postMessageSocket",() => {
 		addFixEvents(window, pluginIframe.contentWindow);
 		addFixEvents(pluginIframe.contentWindow, window);
 	})
-	
 });
