@@ -3,13 +3,13 @@ import providePlugin from "../../src/providePlugin";
 
 // workaround for https://github.com/jsdom/jsdom/issues/2745
 // if no origin exists, replace it with the right targetWindow
-function fixEvents(currentWindow, targetWindow, event) {	
-	if (!event.origin ||event.origin === '' || event.origin === null) {
+function fixEvents(currentWindow, targetWindow, event) {
+	if (!event.origin || event.origin === "" || event.origin === null) {
 		event.stopImmediatePropagation();
-		const eventWithOrigin = new MessageEvent('message', {
+		const eventWithOrigin = new MessageEvent("message", {
 			data: event.data,
 			origin: targetWindow,
-			source: targetWindow
+			source: targetWindow,
 		});
 		currentWindow.dispatchEvent(eventWithOrigin);
 	}
@@ -18,20 +18,20 @@ function fixEvents(currentWindow, targetWindow, event) {
 let fixEventsBinded;
 function addFixEvents(currentWindow, targetWindow) {
 	fixEventsBinded = fixEvents.bind(null, currentWindow, targetWindow);
-	currentWindow.addEventListener('message', fixEventsBinded);
+	currentWindow.addEventListener("message", fixEventsBinded);
 }
 
-function removeFixEvents(windowObject) {
-	windowObject.removeEventListener('message', fixEventsBinded);
-}
+// function removeFixEvents(windowObject) {
+// 	windowObject.removeEventListener("message", fixEventsBinded);
+// }
 
-describe("providePlugin",() => {
-    let pluginIframe;
-    let body;
-    let windowSocket;
-    let iframeSocket;
+describe("providePlugin", () => {
+	let pluginIframe;
+	let body;
+	let windowSocket;
+	let iframeSocket;
 
-    beforeAll(function () {
+	beforeAll(function () {
 		pluginIframe = document.createElement("iframe");
 		pluginIframe.src = "";
 		pluginIframe.allowFullscreen = "allowfullscreen";
@@ -39,10 +39,10 @@ describe("providePlugin",() => {
 		body.appendChild(pluginIframe);
 
 		windowSocket = new PostMessageSocket(window, pluginIframe.contentWindow);
-		addFixEvents(window, pluginIframe.contentWindow)
+		addFixEvents(window, pluginIframe.contentWindow);
 
 		iframeSocket = new PostMessageSocket(pluginIframe.contentWindow, window);
-		addFixEvents(pluginIframe.contentWindow, window)
+		addFixEvents(pluginIframe.contentWindow, window);
 	});
 
     it.todo("throws proper errors on improper data");
