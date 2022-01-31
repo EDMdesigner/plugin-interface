@@ -30,7 +30,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 		}
 
 		async function onInit(config) {
-			console.log("INSIDE INIIIIIIIIIIIT");
+      console.log("INSIDE INIIIIIIIIIIIT")
 
 			listenForRequests();
 
