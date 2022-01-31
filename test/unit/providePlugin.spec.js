@@ -45,57 +45,57 @@ describe("providePlugin", () => {
 		addFixEvents(pluginIframe.contentWindow, window);
 	});
 
-    it.todo("throws proper errors on improper data");
-    it.todo("with proper data, sends domready, throws error if not getting init call");
-    it("with proper data, init properly", async () => {
-        const timeout = 5000;
-        const hooks = {
-            testHook: () => { console.log("testhook") }
-        };
-        const data = {
-            title: "testTitle",
-            description: "testDescription"
-        };
-        const settings = {
-            background: "#abcdef"
-        };
+	it.todo("throws proper errors on improper data");
+	it.todo("with proper data, sends domready, throws error if not getting init call");
+	it("with proper data, init properly", async () => {
+		const timeout = 5000;
+		const hooks = {
+			testHook: () => {
+				console.log("testhook");
+			},
+		};
+		const data = {
+			title: "testTitle",
+			description: "testDescription",
+		};
+		const settings = {
+			background: "#abcdef",
+		};
 
-        function updateData(newData) {
-            data.title = newData.title;
-            data.description = newData.description;
+		function updateData(newData) {
+			data.title = newData.title;
+			data.description = newData.description;
 
-            document.getElementById("title").value = data.title;
-            document.getElementById("description").value = data.description;
-        }
+			document.getElementById("title").value = data.title;
+			document.getElementById("description").value = data.description;
+		}
 
-        function updateSettings(newSettings) {
-            settings.background = newSettings.background;
+		function updateSettings(newSettings) {
+			settings.background = newSettings.background;
 
-            document.body.style.background = settings.background;
-        }
+			document.body.style.background = settings.background;
+		}
 
-        windowSocket.addListener("domReady", onDomReady, { once: true });
+		windowSocket.addListener("domReady", onDomReady, { once: true });
 
-        async function onDomReady(payload) {
+		async function onDomReady(payload) {
+			console.log("HERE");
 
-            console.log("HERE");
-			
+			await windowSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
+		}
 
-            await windowSocket.sendRequest("init", { data , settings, hooks: Object.keys(hooks) }, { timeout });
-        };
-        
-        const iface = await providePlugin({
-            settings,
-            hooks: ["onResetButtonClicked", "onSaveButtonClicked", "onClose"],
-            methods: {
-                updateData,
-                updateSettings
-            }
-        }, iframeSocket);
+		const iface = await providePlugin({
+			settings,
+			hooks: ["onResetButtonClicked", "onSaveButtonClicked", "onClose"],
+			methods: {
+				updateData,
+				updateSettings,
+			},
+		}, iframeSocket);
 
-        console.log("iframe");
-        console.log(iface);
-        
-        expect(true).toBe(true);
-    });   
+		console.log("iframe");
+		console.log(iface);
+
+		expect(true).toBe(true);
+	});
 });
