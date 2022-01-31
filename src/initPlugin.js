@@ -1,8 +1,7 @@
-import CreateIframeSocket from "./createContentWindowSocket.js";
+import PostMessageSocket from "./postMessageSocket.js";
 
 function validateConfig({ settings, hooks }, config) {
     // settings validation is quite hard, we would need a full-fledged json/object-tree validation
-
 }
 
 export default function initPlugin({ container, src, data = {}, settings = {}, hooks = {} }, { timeout = 5000, beforeInit } = {}) {
@@ -16,7 +15,7 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
 
 	container.appendChild(pluginIframe);
 
-    const socket = new CreateIframeSocket(window, pluginIframe.contentWindow);
+    const socket = new PostMessageSocket(window, pluginIframe.contentWindow);
 
     return new Promise((resolve, reject) => {
         socket.addListener("domReady", onDomReady, { once: true });
@@ -24,7 +23,7 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
         async function onDomReady(payload) {
 			
             validateConfig({ settings, hooks }, payload.config)
-            await socket.request("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
+            await socket.sendSignal("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
             listenForRequests();
 
             const methodNames = payload.config.methods;
@@ -37,7 +36,7 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
                             throw new Error(`Naughty boy! Don't request ${type}!`);
                         }
 
-                        return socket.request(methodName, payload);
+                        return socket.sendSignal(methodName, payload);
                     }
                 }
             }, {})

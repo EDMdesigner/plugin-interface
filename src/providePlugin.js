@@ -1,21 +1,25 @@
-import CreateIframeSocket from "./createContentWindowSocket.js";
+import PostMessageSocket from "./postMessageSocket.js";
 
-export default function providePlugin({ settings = {}, hooks = [], methods = {} }) {
+export default function providePlugin({ settings = {}, hooks = [], methods = {} }, _socket = null) {
 	return new Promise((resolve) => {
-		const socket = new CreateIframeSocket(window, window.parent);
+		let socket = _socket;
+		if (!socket) {
+			socket = new PostMessageSocket(window, window.parent);
+		}
+
+		socket.addListener("init", onInit, { once: true });
 
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", sendDomReady);
 		} else {
 			sendDomReady();
 		}
-		
-		socket.addListener("init", onInit, { once: true });
-		
+
+
 		async function sendDomReady() {
 			// await new Promise(resolve => setTimeout(resolve, 500));
 
-			socket.send("domReady", {
+			socket.sendMessage("domReady", {
 				config: {
 					settings,
 					hooks,
@@ -27,6 +31,8 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 		}
 
 		async function onInit(config) {
+            console.log("INSIDE INIIIIIIIIIIIT")
+
 			listenForRequests();
 
 			await new Promise(resolve => setTimeout(resolve, 500));
@@ -39,7 +45,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 							throw new Error(`The following hook is not configured: ${hookName}`)
 						}
 	
-						return socket.request(hookName, payload);
+						return socket.sendSignal(hookName, payload);
 					}
 				}
 			}, {})
