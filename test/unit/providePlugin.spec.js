@@ -81,8 +81,7 @@ describe("providePlugin",() => {
             console.log("HERE");
 			
 
-            await windowSocket.sendSignal("init", { data , settings, hooks: Object.keys(hooks) }, { timeout });
-
+            await windowSocket.sendRequest("init", { data , settings, hooks: Object.keys(hooks) }, { timeout });
         };
         
         const iface = await providePlugin({
