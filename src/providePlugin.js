@@ -1,3 +1,5 @@
+/* eslint-disable require-await */
+/* eslint-disable no-shadow */
 import PostMessageSocket from "./postMessageSocket.js";
 
 export default function providePlugin({ settings = {}, hooks = [], methods = {} }, _socket = null) {
@@ -15,6 +17,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 			sendDomReady();
 		}
 
+		// eslint-disable-next-line require-await
 		async function sendDomReady() {
 			// await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -30,7 +33,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 		}
 
 		async function onInit(config) {
-      console.log("INSIDE INIIIIIIIIIIIT")
+			console.log("INSIDE INIIIIIIIIIIIT");
 
 			listenForRequests();
 
