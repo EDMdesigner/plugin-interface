@@ -15,7 +15,6 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 			sendDomReady();
 		}
 
-
 		async function sendDomReady() {
 			// await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -26,12 +25,12 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 					methods: Object.keys(methods),
 				},
 			});
-	
+
 			document.removeEventListener("DOMContentLoaded", sendDomReady);
 		}
 
 		async function onInit(config) {
-            console.log("INSIDE INIIIIIIIIIIIT")
+      console.log("INSIDE INIIIIIIIIIIIT")
 
 			listenForRequests();
 
@@ -42,18 +41,18 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 					...hooks,
 					[hookName]: async (payload) => {
 						if (!config.hooks.includes(hookName)) {
-							throw new Error(`The following hook is not configured: ${hookName}`)
+							throw new Error(`The following hook is not configured: ${hookName}`);
 						}
-	
+
 						return socket.sendSignal(hookName, payload);
-					}
-				}
-			}, {})
+					},
+				};
+			}, {});
 
 			resolve({
 				data: config.data,
 				settings: config.settings,
-				hooks: hookFunctions
+				hooks: hookFunctions,
 			});
 		}
 
