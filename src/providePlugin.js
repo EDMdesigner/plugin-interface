@@ -2,7 +2,7 @@
 /* eslint-disable no-shadow */
 import PostMessageSocket from "./postMessageSocket.js";
 
-export default function providePlugin({ settings = {}, hooks = [], methods = {} }, _socket = null) {
+export default function providePlugin({ settings = {}, hookNames = [], methods = {} }, _socket = null) {
 	return new Promise((resolve) => {
 		let socket = _socket;
 		if (!socket) {
@@ -24,7 +24,7 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 			socket.sendMessage("domReady", {
 				config: {
 					settings,
-					hooks,
+					hookNames,
 					methods: Object.keys(methods),
 				},
 			});
@@ -33,17 +33,15 @@ export default function providePlugin({ settings = {}, hooks = [], methods = {} 
 		}
 
 		async function onInit(config) {
-			console.log("INSIDE INIIIIIIIIIIIT");
-
 			listenForRequests();
 
 			await new Promise(resolve => setTimeout(resolve, 500));
 
-			const hookFunctions = hooks.reduce((hooks, hookName) => {
+			const hookFunctions = hookNames.reduce((hooks, hookName) => {
 				return {
 					...hooks,
 					[hookName]: async (payload) => {
-						if (!config.hooks.includes(hookName)) {
+						if (!config.hookNames.includes(hookName)) {
 							throw new Error(`The following hook is not configured: ${hookName}`);
 						}
 

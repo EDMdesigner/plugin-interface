@@ -40,7 +40,7 @@
             
                 const iface = await providePlugin({
                     settings,
-                    hooks: ["onResetButtonClicked", "onSaveButtonClicked", "onClose"],
+                    hookNames: ["onResetButtonClicked", "onSaveButtonClicked", "onClose"],
                     methods: {
                         updateData,
                         updateSettings
