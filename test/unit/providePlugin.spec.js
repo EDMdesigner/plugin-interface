@@ -62,40 +62,32 @@ describe("providePlugin", () => {
 			background: "#abcdef",
 		};
 
-		function updateData(newData) {
-			data.title = newData.title;
-			data.description = newData.description;
-
-			document.getElementById("title").value = data.title;
-			document.getElementById("description").value = data.description;
-		}
-
-		function updateSettings(newSettings) {
-			settings.background = newSettings.background;
-
-			document.body.style.background = settings.background;
+		function testMethod(testData) {
+			console.log(testData);
 		}
 
 		windowSocket.addListener("domReady", onDomReady, { once: true });
 
+		let domReadyResponse;
 		async function onDomReady(payload) {
-			console.log("HERE");
-
+			domReadyResponse = payload;
 			await windowSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
 		}
 
 		const iface = await providePlugin({
 			settings,
-			hooks: ["onResetButtonClicked", "onSaveButtonClicked", "onClose"],
+			hookNames: [ "testHook" ],
 			methods: {
-				updateData,
-				updateSettings,
+				testMethod,
 			},
 		}, iframeSocket);
 
-		console.log("iframe");
-		console.log(iface);
+		expect(domReadyResponse.config.settings).toEqual({ background: "#abcdef" });
+		expect(domReadyResponse.config.hookNames).toEqual([ "testHook" ]);
+		expect(domReadyResponse.config.methods).toEqual([ "testMethod" ]);
 
-		expect(true).toBe(true);
+		expect(iface.data).toEqual({ title: "testTitle", description: "testDescription" });
+		expect(iface.settings).toEqual({ background: "#abcdef" });
+		expect(typeof iface.hooks.testHook).toBe("function");
 	});
 });
