@@ -54,7 +54,7 @@
                     contentEditorPlugin.showSplashScreen();
                     await contentEditorPlugin.methods.updateData(data);
                     contentEditorPlugin.show();
-                    await new Promise(resolve => setTimeout(resolve, 8000)); // simulate latency
+                    await new Promise(resolve => setTimeout(resolve, 400)); // simulate latency
                     contentEditorPlugin.hideSplashScreen();
                 }
             }());
