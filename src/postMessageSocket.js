@@ -68,9 +68,9 @@ export default class PostMessageSocket {
 					reject(new Error(error));
 				}
 			};
-			const messageHandler = waitForResponse.bind(this);
-			this.#currentWindow.addEventListener("message", waitForResponse.bind(this, messageHandler));
-			this.#appliedEventListeners.push({ _id: msgId, handler: messageHandler });
+			const handler = waitForResponse.bind(this);
+			this.#currentWindow.addEventListener("message", waitForResponse.bind(this, handler));
+			this.#appliedEventListeners.push({ _id: msgId, handler });
 		});
 	}
 
