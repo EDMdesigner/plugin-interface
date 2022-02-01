@@ -7,10 +7,9 @@ export default class PostMessageSocket {
 
 	#msgIdGenerator;
 
-	#appliedEventListners = [];
+	#appliedEventListeners = [];
 
 	constructor(currentWindow, targetWindow) {
-		// this.socketId = nanoid(8); // Do we need it? If not we don't need nanoid!
 		this.#currentWindow = currentWindow;
 		this.#targetWindow = targetWindow;
 		this.#setupSocket();
@@ -18,6 +17,10 @@ export default class PostMessageSocket {
 
 	addListener(type, callback, { once = false } = {}) {
 		this.#listeners[type] = { callback, once };
+	}
+
+	#removeListener(type) {
+		delete this.#listeners[type];
 	}
 
 	sendMessage(type, payload) {
@@ -32,27 +35,27 @@ export default class PostMessageSocket {
 	}
 
 	terminate() {
-		this.#appliedEventListners.forEach((listener) => {
-			this.#currentWindow.removeEventListener("message", listener);
+		this.#appliedEventListeners.forEach((listener) => {
+			this.#currentWindow.removeEventListener("message", listener.handler);
 		});
 		this.#currentWindow = null;
 		this.#targetWindow = null;
 	}
 
-	#removeListener(type) {
-		// TODO: also delete the listener from the #appliedEventListners = [];
-		delete this.#listeners[type];
-	}
-
 	#waitForResponse(msgId) {
 		return new Promise((resolve, reject) => {
-			const waitForResponse = (event) => {
+			const waitForResponse = (handlerFn, event) => {
 				if (event.source !== this.#targetWindow) return;
+
+				const index = this.#appliedEventListeners.findIndex(hadler => hadler._id === msgId);
+				if (index === -1) return;
+
 				try {
 					const response = this.#tryParse(event);
 					if (response.msgId !== msgId) return;
 
-					this.#currentWindow.removeEventListener("message", waitForResponse);
+					this.#currentWindow.removeEventListener("message", handlerFn);
+					this.#appliedEventListeners.splice(index, 1);
 
 					if (response.error) {
 						reject(new Error(response.error));
@@ -60,13 +63,14 @@ export default class PostMessageSocket {
 						resolve(response.payload);
 					}
 				} catch (error) {
-					this.#currentWindow.removeEventListener("message", waitForResponse);
+					this.#currentWindow.removeEventListener("message", handlerFn);
+					this.#appliedEventListeners.splice(index, 1);
 					reject(new Error(error));
 				}
 			};
-			const messageHandler = waitForResponse.bind(this);
-			this.#currentWindow.addEventListener("message", waitForResponse.bind(this));
-			this.#appliedEventListners.push(messageHandler);
+			const handler = waitForResponse.bind(this);
+			this.#currentWindow.addEventListener("message", waitForResponse.bind(this, handler));
+			this.#appliedEventListeners.push({ _id: msgId, handler });
 		});
 	}
 
@@ -81,7 +85,7 @@ export default class PostMessageSocket {
 
 		const messageHandler = this.#onMessage.bind(this);
 		this.#currentWindow.addEventListener("message", messageHandler);
-		this.#appliedEventListners.push(messageHandler);
+		this.#appliedEventListeners.push({ _id: `START-${new Date().getTime()}`, hadler: messageHandler });
 	}
 
 	async #onMessage(event) {
