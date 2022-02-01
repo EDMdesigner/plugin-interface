@@ -16,6 +16,7 @@ export default class PostMessageSocket {
 	}
 
 	addListener(type, callback, { once = false } = {}) {
+		if (!this.#currentWindow) return;
 		this.#listeners[type] = { callback, once };
 	}
 
@@ -24,29 +25,22 @@ export default class PostMessageSocket {
 	}
 
 	sendMessage(type, payload) {
+		if (!this.#targetWindow) return;
 		const msgId = this.#getNextMsgId();
 		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
 	}
 
 	sendRequest(type, payload) {
+		if (!this.#targetWindow) return;
 		const msgId = this.#getNextMsgId();
 		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
-		this.#waitForResponse(msgId);
-	}
-
-	terminate() {
-		this.#appliedEventListeners.forEach((listener) => {
-			this.#currentWindow.removeEventListener("message", listener.handler);
-		});
-		this.#currentWindow = null;
-		this.#targetWindow = null;
+		return this.#waitForResponse(msgId);
 	}
 
 	#waitForResponse(msgId) {
 		return new Promise((resolve, reject) => {
 			const waitForResponse = (handlerFn, event) => {
 				if (event.source !== this.#targetWindow) return;
-
 				const index = this.#appliedEventListeners.findIndex(hadler => hadler._id === msgId);
 				if (index === -1) return;
 
@@ -54,7 +48,8 @@ export default class PostMessageSocket {
 					const response = this.#tryParse(event);
 					if (response.msgId !== msgId) return;
 
-					this.#currentWindow.removeEventListener("message", handlerFn);
+					event.stopPropagation();
+					this.#currentWindow.removeEventListener("message", handlerFn, true);
 					this.#appliedEventListeners.splice(index, 1);
 
 					if (response.error) {
@@ -63,14 +58,14 @@ export default class PostMessageSocket {
 						resolve(response.payload);
 					}
 				} catch (error) {
-					this.#currentWindow.removeEventListener("message", handlerFn);
+					this.#currentWindow.removeEventListener("message", handlerFn, true);
 					this.#appliedEventListeners.splice(index, 1);
 					reject(new Error(error));
 				}
 			};
 			const handler = waitForResponse.bind(this);
 			this.#currentWindow.addEventListener("message", waitForResponse.bind(this, handler));
-			this.#appliedEventListeners.push({ _id: msgId, handler });
+			this.#appliedEventListeners.push({ _id: msgId, handler, useCapture: true });
 		});
 	}
 
@@ -84,8 +79,8 @@ export default class PostMessageSocket {
 		this.#msgIdGenerator = msgIdGenerator.call(this);
 
 		const messageHandler = this.#onMessage.bind(this);
-		this.#currentWindow.addEventListener("message", messageHandler);
-		this.#appliedEventListeners.push({ _id: `START-${new Date().getTime()}`, hadler: messageHandler });
+		this.#currentWindow.addEventListener("message", messageHandler, false);
+		this.#appliedEventListeners.push({ _id: `START-${new Date().getTime()}`, handler: messageHandler, useCapture: false });
 	}
 
 	async #onMessage(event) {
@@ -134,5 +129,15 @@ export default class PostMessageSocket {
 
 	#getNextMsgId() {
 		return this.#msgIdGenerator.next().value;
+	}
+
+	terminate() {
+		if (!this.#currentWindow) return;
+		while (this.#appliedEventListeners.length) {
+			const listener = this.#appliedEventListeners.pop();
+			this.#currentWindow.removeEventListener("message", listener.handler, !!listener.useCapture);
+		}
+		this.#currentWindow = null;
+		this.#targetWindow = null;
 	}
 }
