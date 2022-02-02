@@ -8,7 +8,7 @@
 		"test": "jest --watch"
 	},
 	"devDependencies": {
-		"@EDMdesigner/eslint-config-edmdesigner": "^2.1.1",
+		"@EDMdesigner/eslint-config-edmdesigner": "^2.1.2",
 		"jest": "^27.4.7",
 		"vite": "^2.7.2",
 		"@babel/core": "^7.16.12",
