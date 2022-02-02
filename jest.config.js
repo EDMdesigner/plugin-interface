@@ -1,6 +1,6 @@
 const config = {
 	"setupFilesAfterEnv": ["./test/unit/setupTests.js"] ,
-	"testEnvironment": "jsdom",
+	"testEnvironment": "./test/customEnvironment.js",
 	moduleFileExtensions: [
 		"js",
 	],
