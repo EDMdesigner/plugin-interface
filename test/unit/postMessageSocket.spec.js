@@ -222,7 +222,6 @@ describe("set up postMessageSocket environments", () => {
 			addFixEvents(window, window);
 			addFixEvents(pluginIframe.contentWindow, pluginIframe.contentWindow);
 
-			// window.postMessage(JSON.stringify({ type: testWindowSocket, payload: messageOne, msgId: "testMsg" }), "*");
 			pluginIframe.contentWindow.postMessage(JSON.stringify({ type: testiframeSocketSocket, payload: messageOne, msgId: "testMsg" }), "*");
 
 			await new Promise(resolve => setTimeout(resolve, 100));
@@ -234,10 +233,18 @@ describe("set up postMessageSocket environments", () => {
 			addFixEvents(pluginIframe.contentWindow, window);
 		});
 
-		it.todo("return error from hooks");
+		it("return error from hooks", async function () {
+			const e = new Error("error happend");
+			windowSocket.addListener("hook", () => {
+				throw e;
+			});
 
-		it("test terminate", async function () {
+			await expect(iframeSocket.sendRequest("hook", "hello world")).rejects.toStrictEqual(e);
+		});
+
+		it("test terminate function", async function () {
 			windowSocket.terminate();
+			iframeSocket.terminate();
 
 			await new Promise(resolve => setTimeout(resolve, 100));
 
