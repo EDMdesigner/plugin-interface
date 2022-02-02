@@ -23,8 +23,7 @@ export default class PostMessageSocket {
 
 	sendMessage(type, payload) {
 		if (!this.#targetWindow && this.#isTerminated) return;
-		const msgId = this.#getNextMsgId();
-		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
+		this.#targetWindow.postMessage(JSON.stringify({ type, payload }), "*");
 	}
 
 	sendRequest(type, payload) {
@@ -69,10 +68,13 @@ export default class PostMessageSocket {
 	}
 
 	async #onMessage(event) {
-		if (event.source !== this.#targetWindow) return;
+		if (!!event.source && event.source !== this.#targetWindow) return;
 
 		const message = this.#tryParse(event);
 		if (!message) return;
+		if (message.error) {
+			throw new Error(message.error);
+		}
 
 		const listener = this.#listeners[message.type];
 		if (!listener) return;
@@ -88,13 +90,15 @@ export default class PostMessageSocket {
 				response.payload = payload;
 			}
 
-			if (event.source) {
-				this.#targetWindow.postMessage(JSON.stringify(response), "*");
-			}
+			this.#targetWindow.postMessage(JSON.stringify(response), "*");
 		};
 
 		try {
-			respond({ payload: await listener.callback(message.payload) });
+			if (message.msgId) {
+				respond({ payload: await listener.callback(message.payload) });
+			} else {
+				await listener.callback(message.payload);
+			}
 		} catch (error) {
 			respond({ error });
 		}

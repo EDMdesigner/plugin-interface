@@ -233,11 +233,57 @@ describe("set up postMessageSocket environments", () => {
 
 		it("return error from hooks", async function () {
 			const e = new Error("error happend");
-			windowSocket.addListener("hook", () => {
+			windowSocket.addListener("error", () => {
 				throw e;
 			});
 
-			await expect(iframeSocket.sendRequest("hook", "hello world")).rejects.toStrictEqual(e);
+			await expect(iframeSocket.sendRequest("error", "hello world")).rejects.toStrictEqual(e);
+		});
+
+		it("return text error from hooks, but resolves with it", async function () {
+			const e = { error: "error happend" };
+			windowSocket.addListener("hook", () => {
+				return e;
+			});
+
+			await expect(iframeSocket.sendRequest("hook", "hello world")).resolves.toStrictEqual(e);
+		});
+
+		it("throw error in a listenerCallback with sendMessage", async function () {
+			const errorCb = () => {
+				throw new Error("error happend");
+			};
+
+			// windowSocket.addListener("error", errorCb);
+			iframeSocket.addListener("error", errorCb);
+
+			let error;
+
+			try {
+				await windowSocket.sendMessage("error", "KAKKAKAKAKAKAKAKAKAKAKAKAKAKAS");
+				await new Promise(resolve => setTimeout(resolve, 500));
+			} catch (e) {
+				console.log(e);
+				error = e;
+			}
+
+			expect(error).toBe("error happend");
+			// iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
+			// // we have to wait after all postMessage since they are implemented as setTimeout in jsdom
+			// await new Promise(resolve => setTimeout(resolve, 100));
+
+			// expect(messages).toHaveLength(2);
+			// expect(messages[0]).toBe(messageOne);
+			// expect(messages[1]).toBe(messageTwo);
+
+			// windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne).toThrow();
+			// iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
+			// // we have to wait after all postMessage since they are implemented as setTimeout in jsdom
+			// await new Promise(resolve => setTimeout(resolve, 100));
+
+			// expect(messages).toHaveLength(2);
+			// expect(messages[0]).toBe(messageOne);
+			// expect(messages[1]).toBe(messageTwo);
 		});
 
 		it("test terminate function", async function () {
