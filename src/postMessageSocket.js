@@ -1,14 +1,9 @@
 export default class PostMessageSocket {
 	#currentWindow;
-
 	#targetWindow;
-
 	#listeners = {};
-
 	#msgIdGenerator;
-
 	#appliedEventListeners = [];
-
 	#isTerminated = false;
 
 	constructor(currentWindow, targetWindow) {
@@ -29,13 +24,14 @@ export default class PostMessageSocket {
 	sendMessage(type, payload) {
 		if (!this.#targetWindow && this.#isTerminated) return;
 		const msgId = this.#getNextMsgId();
-		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
+		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId, waitForResponse: false }), "*");
+		return this.#waitForResponse(msgId, false);
 	}
 
 	sendRequest(type, payload) {
 		if (!this.#targetWindow && this.#isTerminated) return;
 		const msgId = this.#getNextMsgId();
-		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId }), "*");
+		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId, waitForResponse: true }), "*");
 		return this.#waitForResponse(msgId);
 	}
 
@@ -53,8 +49,8 @@ export default class PostMessageSocket {
 				try {
 					const response = this.#tryParse(event);
 					if (response.msgId !== msgId) return;
-
 					event.stopPropagation();
+
 					this.#currentWindow.removeEventListener("message", listener.handler, listener.useCapture);
 					this.#appliedEventListeners.splice(index, 1);
 
@@ -76,10 +72,9 @@ export default class PostMessageSocket {
 	}
 
 	async #onMessage(event) {
-		if (event.source !== this.#targetWindow) return;
+		if (!!event.source && event.source !== this.#targetWindow) return;
 
 		const message = this.#tryParse(event);
-		console.log(message);
 		if (!message) return;
 
 		const listener = this.#listeners[message.type];
@@ -88,23 +83,22 @@ export default class PostMessageSocket {
 		const respond = ({ error, payload }) => {
 			const response = { msgId: message.msgId };
 
-			if (typeof error === "string") {
-				response.error = error;
-			} else if (error) {
+			if (error) {
 				response.error = error.message || "Unexpected error";
 			} else {
 				response.payload = payload;
 			}
 
-			if (event.source) {
-				console.log(response);
-				this.#targetWindow.postMessage(JSON.stringify(response), "*");
-			}
+			this.#targetWindow.postMessage(JSON.stringify(response), "*");
 		};
 
 		try {
-			const resp = await listener.callback(message.payload);
-			respond({ payload: resp});
+			if (message.waitForResponse) {
+				respond({ payload: await listener.callback(message.payload) });
+			} else {
+				await listener.callback(message.payload);
+				respond({ payload: "success" });
+			}
 		} catch (error) {
 			respond({ error });
 		}

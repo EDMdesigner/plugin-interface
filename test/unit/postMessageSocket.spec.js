@@ -146,10 +146,8 @@ describe.skip("set up postMessageSocket environments", () => {
 			windowSocket.addListener(testWindowSocketOnce, messageCallback, { once: true });
 			iframeSocket.addListener(testiframeSocketSocketOnce, messageCallback, { once: true });
 
-			windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne);
-			iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
-			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne);
+			await iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
 
 			expect(messages).toHaveLength(2);
 			expect(messages[0]).toBe(messageOne);
@@ -233,11 +231,28 @@ describe.skip("set up postMessageSocket environments", () => {
 
 		it("return error from hooks", async function () {
 			const e = new Error("error happend");
-			windowSocket.addListener("hook", () => {
+			windowSocket.addListener("error", () => {
 				throw e;
 			});
 
-			await expect(iframeSocket.sendRequest("hook", "hello world")).rejects.toStrictEqual(e);
+			await expect(iframeSocket.sendRequest("error", "hello world")).rejects.toStrictEqual(e);
+		});
+
+		it("return text error from hooks, but resolves with it", async function () {
+			const e = { error: "error happend" };
+			windowSocket.addListener("hook", () => {
+				return e;
+			});
+
+			await expect(iframeSocket.sendRequest("hook", "hello world")).resolves.toStrictEqual(e);
+		});
+
+		it("throw error in a listenerCallback with sendMessage", async function () {
+			const e = new Error("error happend");
+			windowSocket.addListener("error", () => {
+				throw e;
+			});
+			await expect(iframeSocket.sendMessage("error", "Hello world!")).rejects.toStrictEqual(e);
 		});
 
 		it("test terminate function", async function () {
@@ -256,5 +271,6 @@ describe.skip("set up postMessageSocket environments", () => {
 
 			expect(messages).toHaveLength(0);
 		});
+		it.todo("when parsing throws arror");
 	});
 });
