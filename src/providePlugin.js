@@ -3,37 +3,39 @@
 import PostMessageSocket from "./postMessageSocket.js";
 
 export default function providePlugin({ settings = {}, hookNames = [], methods = {} }, _socket = null) {
+	let socket = _socket;
+	if (!socket) {
+		socket = new PostMessageSocket(window, window.parent);
+	}
+
+	async function sendDomReady() {
+		// await new Promise(resolve => setTimeout(resolve, 500));
+		socket.sendMessage("domReady", {
+			config: {
+				settings,
+				hookNames,
+				methods: Object.keys(methods),
+			},
+		});
+		document.removeEventListener("DOMContentLoaded", sendDomReady);
+	}
+
 	return new Promise((resolve) => {
-		let socket = _socket;
-		if (!socket) {
-			socket = new PostMessageSocket(window, window.parent);
-		}
-
+		// eslint-disable-next-line require-await
 		socket.addListener("init", onInit, { once: true });
-
 		if (document.readyState === "loading") {
 			document.addEventListener("DOMContentLoaded", sendDomReady);
 		} else {
 			sendDomReady();
 		}
 
-		// eslint-disable-next-line require-await
-		async function sendDomReady() {
-			// await new Promise(resolve => setTimeout(resolve, 500));
-
-			socket.sendMessage("domReady", {
-				config: {
-					settings,
-					hookNames,
-					methods: Object.keys(methods),
-				},
-			});
-
-			document.removeEventListener("DOMContentLoaded", sendDomReady);
-		}
-
 		async function onInit(config) {
-			console.log(config);
+			function listenForRequests() {
+				Object.keys(methods).forEach((methodName) => {
+					socket.addListener(methodName, payload => methods[methodName](payload));
+				});
+			}
+
 			listenForRequests();
 
 			// await new Promise(resolve => setTimeout(resolve, 500));
@@ -54,18 +56,6 @@ export default function providePlugin({ settings = {}, hookNames = [], methods =
 				data: config.data,
 				settings: config.settings,
 				hooks: hookFunctions,
-			});
-
-			return {
-				data: config.data,
-				settings: config.settings,
-				hooks: hookFunctions,
-			};
-		}
-
-		async function listenForRequests() {
-			Object.keys(methods).forEach((methodName) => {
-				socket.addListener(methodName, payload => methods[methodName](payload));
 			});
 		}
 	});
