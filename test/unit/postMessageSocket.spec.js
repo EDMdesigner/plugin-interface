@@ -1,30 +1,8 @@
 import PostMessageSocket from "../../src/postMessageSocket";
+import { addFixEvents, removeFixEvents } from "./testUtils/fixEvents";
+import { sideEffectsMapper, createEventListenerSpy, resetJSDOM } from "./testUtils/jsdomReset";
 
-// workaround for https://github.com/jsdom/jsdom/issues/2745
-// if no origin exists, replace it with the right targetWindow
-function fixEvents(currentWindow, targetWindow, event) {
-	if (!event.origin || event.origin === "" || event.origin === null) {
-		event.stopImmediatePropagation();
-		const eventWithOrigin = new MessageEvent("message", {
-			data: event.data,
-			origin: targetWindow,
-			source: targetWindow,
-		});
-		currentWindow.dispatchEvent(eventWithOrigin);
-	}
-}
-
-let fixEventsBinded;
-function addFixEvents(currentWindow, targetWindow) {
-	fixEventsBinded = fixEvents.bind(null, currentWindow, targetWindow);
-	currentWindow.addEventListener("message", fixEventsBinded);
-}
-
-function removeFixEvents(windowObject) {
-	windowObject.removeEventListener("message", fixEventsBinded);
-}
-
-describe.skip("set up postMessageSocket environments", () => {
+describe("set up postMessageSocket environments", () => {
 	let pluginIframe;
 	const messages = [];
 	let windowSocket;
@@ -40,81 +18,14 @@ describe.skip("set up postMessageSocket environments", () => {
 	const messageOne = "This is the first message";
 	const messageTwo = "This is the second message";
 
-	const sideEffects = {
-		document: {
-			addEventListener: {
-				fn: document.addEventListener,
-				refs: [],
-			},
-			keys: Object.keys(document),
-		},
-		window: {
-			addEventListener: {
-				fn: window.addEventListener,
-				refs: [],
-			},
-			keys: Object.keys(window),
-		},
-	};
+	const sideEffects = sideEffectsMapper(window, document);
 
-	// Lifecycle Hooks
-	// -----------------------------------------------------------------------------
 	beforeAll(() => {
-		// Spy addEventListener
-		["document", "window"].forEach((obj) => {
-			const fn = sideEffects[obj].addEventListener.fn;
-			const refs = sideEffects[obj].addEventListener.refs;
-
-			function addEventListenerSpy(type, listener, options) {
-				// Store listener reference so it can be removed during reset
-				refs.push({ type, listener, options });
-				// Call original window.addEventListener
-				fn(type, listener, options);
-			}
-
-			// Add to default key array to prevent removal during reset
-			sideEffects[obj].keys.push("addEventListener");
-
-			// Replace addEventListener with mock
-			global[obj].addEventListener = addEventListenerSpy;
-		});
+		createEventListenerSpy(sideEffects);
 	});
 
-	// Reset JSDOM. This attempts to remove side effects from tests, however it does
-	// not reset all changes made to globals like the window and document
-	// objects. Tests requiring a full JSDOM reset should be stored in separate
-	// files, which is only way to do a complete JSDOM reset with Jest.
 	beforeEach(() => {
-		const rootElm = document.documentElement;
-
-		// Remove attributes on root element
-		[ ...rootElm.attributes ].forEach(attr => rootElm.removeAttribute(attr.name));
-
-		// Remove elements (faster than setting innerHTML)
-		while (rootElm.firstChild) {
-			rootElm.removeChild(rootElm.firstChild);
-		}
-
-		// Remove global listeners and keys
-		["document", "window"].forEach((obj) => {
-			const refs = sideEffects[obj].addEventListener.refs;
-
-			// Listeners
-			while (refs.length) {
-				const { type, listener, options } = refs.pop();
-				global[obj].removeEventListener(type, listener, options);
-			}
-
-			// Keys
-			Object.keys(global[obj])
-				.filter(key => !sideEffects[obj].keys.includes(key))
-				.forEach((key) => {
-					delete global[obj][key];
-				});
-		});
-
-		// Restore base elements
-		rootElm.innerHTML = "<head></head><body></body>";
+		resetJSDOM(document, sideEffects);
 	});
 
 	describe("postMessageSocket tests", function () {
