@@ -38,13 +38,16 @@ export default function providePlugin({ settings = {}, hookNames = [], methods =
 			await new Promise(resolve => setTimeout(resolve, 500));
 
 			const hookFunctions = hookNames.reduce((hooks, hookName) => {
+				if (!config.hooks.includes(hookName)) {
+					socket.sendMessage({error: `The following hook is not configured: ${hookName}`});
+					return {
+						...hooks,
+					};
+					// throw new Error(`The following hook is not configured: ${hookName}`);
+				}
 				return {
 					...hooks,
 					[hookName]: async (payload) => {
-						if (!config.hookNames.includes(hookName)) {
-							throw new Error(`The following hook is not configured: ${hookName}`);
-						}
-
 						return socket.sendRequest(hookName, payload);
 					},
 				};

@@ -1,6 +1,6 @@
-import "regenerator-runtime/runtime";
+// import "regenerator-runtime/runtime";
 // import JSDOM from "jsdom";
-const jsdom = require("jsdom");
+// const jsdom = require("jsdom");
 import PostMessageSocket from "../../src/postMessageSocket";
 import providePlugin from "../../src/providePlugin";
 
@@ -28,6 +28,82 @@ function addFixEvents(currentWindow, targetWindow) {
 // 	windowObject.removeEventListener("message", fixEventsBinded);
 // }
 
+const sideEffects = {
+	document: {
+		addEventListener: {
+			fn: document.addEventListener,
+			refs: [],
+		},
+		keys: Object.keys(document),
+	},
+	window: {
+		addEventListener: {
+			fn: window.addEventListener,
+			refs: [],
+		},
+		keys: Object.keys(window),
+	},
+};
+
+// Lifecycle Hooks
+// -----------------------------------------------------------------------------
+beforeAll(() => {
+	// Spy addEventListener
+	["document", "window"].forEach((obj) => {
+		const fn = sideEffects[obj].addEventListener.fn;
+		const refs = sideEffects[obj].addEventListener.refs;
+
+		function addEventListenerSpy(type, listener, options) {
+			// Store listener reference so it can be removed during reset
+			refs.push({ type, listener, options });
+			// Call original window.addEventListener
+			fn(type, listener, options);
+		}
+
+		// Add to default key array to prevent removal during reset
+		sideEffects[obj].keys.push("addEventListener");
+
+		// Replace addEventListener with mock
+		global[obj].addEventListener = addEventListenerSpy;
+	});
+});
+
+// Reset JSDOM. This attempts to remove side effects from tests, however it does
+// not reset all changes made to globals like the window and document
+// objects. Tests requiring a full JSDOM reset should be stored in separate
+// files, which is only way to do a complete JSDOM reset with Jest.
+beforeEach(() => {
+	const rootElm = document.documentElement;
+
+	// Remove attributes on root element
+	[ ...rootElm.attributes ].forEach(attr => rootElm.removeAttribute(attr.name));
+
+	// Remove elements (faster than setting innerHTML)
+	while (rootElm.firstChild) {
+		rootElm.removeChild(rootElm.firstChild);
+	}
+
+	// Remove global listeners and keys
+	["document", "window"].forEach((obj) => {
+		const refs = sideEffects[obj].addEventListener.refs;
+
+		// Listeners
+		while (refs.length) {
+			const { type, listener, options } = refs.pop();
+			global[obj].removeEventListener(type, listener, options);
+		}
+
+		// Keys
+		Object.keys(global[obj])
+			.filter(key => !sideEffects[obj].keys.includes(key))
+			.forEach((key) => {
+				delete global[obj][key];
+			});
+	});
+
+	// Restore base elements
+	rootElm.innerHTML = "<head></head><body></body>";
+});
 describe("providePlugin", () => {
 	let pluginIframe;
 	let body;
@@ -35,7 +111,7 @@ describe("providePlugin", () => {
 	let iframeSocket;
 
 	beforeEach(function () {
-		jest.clearAllMocks();
+		// jest.clearAllMocks();
 		// // eslint-disable-next-line no-shadow
 		// const jsdom = require("jsdom");
 		// const { window } = new jsdom.JSDOM('<body></body>');
@@ -49,15 +125,15 @@ describe("providePlugin", () => {
 		// window = dom.window;
 
 
-		// eslint-disable-next-line no-shadow
-		// const jsdom = require("jsdom");
-		const dom = new jsdom.JSDOM();
-		global.document = dom.window.document;
-		// eslint-disable-next-line no-global-assign
-		document = dom.window.document;
-		global.window = dom.window;
-		// eslint-disable-next-line no-global-assign
-		window = dom.window;
+		// // eslint-disable-next-line no-shadow
+		// // const jsdom = require("jsdom");
+		// const dom = new jsdom.JSDOM();
+		// global.document = dom.window.document;
+		// // eslint-disable-next-line no-global-assign
+		// document = dom.window.document;
+		// global.window = dom.window;
+		// // eslint-disable-next-line no-global-assign
+		// window = dom.window;
 
 		pluginIframe = document.createElement("iframe");
 		pluginIframe.src = "";
@@ -91,12 +167,12 @@ describe("providePlugin", () => {
 		console.log(testData);
 	}
 	let domReadyResponse;
-	it("with missing hook method, throws error", async () => {
+	fit("with missing hook method, throws error", async () => {
 		windowSocket.addListener("domReady", onDomReady, { once: true });
 
 		async function onDomReady(payload) {
 			domReadyResponse = payload;
-			await windowSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
+			await windowSocket.sendRequest("init", { data, settings, hooks: [] }, { timeout });
 		}
 		const iface = await providePlugin({
 			settings,
@@ -112,14 +188,14 @@ describe("providePlugin", () => {
 
 		expect(iface.data).toEqual({ title: "testTitle", description: "testDescription" });
 		expect(iface.settings).toEqual({ background: "#abcdef" });
-		expect(typeof iface.hooks.testHook).toBe("function");
+		expect(iface.hooks).toEqual({});
+		console.log(iface);
 	});
 	// felszetupol hookot ami nincs
 	it("with proper data, init properly", async () => {
 		windowSocket.addListener("domReady", onDomReady, { once: true });
 
 		async function onDomReady(payload) {
-			console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 			domReadyResponse = payload;
 			await windowSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
 		}
