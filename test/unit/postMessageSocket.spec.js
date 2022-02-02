@@ -24,7 +24,7 @@ function removeFixEvents(windowObject) {
 	windowObject.removeEventListener("message", fixEventsBinded);
 }
 
-describe("set up postMessageSocket environments", () => {
+describe.skip("set up postMessageSocket environments", () => {
 	let pluginIframe;
 	const messages = [];
 	let windowSocket;

@@ -172,7 +172,9 @@ describe("providePlugin", () => {
 
 		async function onDomReady(payload) {
 			domReadyResponse = payload;
-			await windowSocket.sendRequest("init", { data, settings, hooks: [] }, { timeout });
+			const initResponse = await windowSocket.sendRequest("init", { data, settings, hooks: [] }, { timeout });
+			console.log("INITRESPOOOOOOOOOOOOOOOOOOOOOONSE");
+			console.log(initResponse);
 		}
 		const iface = await providePlugin({
 			settings,

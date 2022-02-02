@@ -33,13 +33,14 @@ export default function providePlugin({ settings = {}, hookNames = [], methods =
 		}
 
 		async function onInit(config) {
+			console.log(config);
 			listenForRequests();
 
-			await new Promise(resolve => setTimeout(resolve, 500));
+			// await new Promise(resolve => setTimeout(resolve, 500));
 
 			const hookFunctions = hookNames.reduce((hooks, hookName) => {
 				if (!config.hooks.includes(hookName)) {
-					throw new Error(`The following hook is not configured: ${hookName}`);
+					socket.sendMessage(`The following hook is not configured: ${hookName}`);
 				}
 				return {
 					...hooks,
@@ -54,6 +55,12 @@ export default function providePlugin({ settings = {}, hookNames = [], methods =
 				settings: config.settings,
 				hooks: hookFunctions,
 			});
+
+			return {
+				data: config.data,
+				settings: config.settings,
+				hooks: hookFunctions,
+			};
 		}
 
 		async function listenForRequests() {

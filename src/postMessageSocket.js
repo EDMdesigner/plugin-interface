@@ -42,6 +42,8 @@ export default class PostMessageSocket {
 	#waitForResponse(msgId) {
 		return new Promise((resolve, reject) => {
 			const waitForResponse = (event) => {
+				console.log("HEREEEEEEE");
+				console.log(event);
 				if (event.source !== this.#targetWindow) return;
 
 				const index = this.#appliedEventListeners.findIndex(hadler => hadler._id === msgId);
@@ -77,6 +79,7 @@ export default class PostMessageSocket {
 		if (event.source !== this.#targetWindow) return;
 
 		const message = this.#tryParse(event);
+		console.log(message);
 		if (!message) return;
 
 		const listener = this.#listeners[message.type];
@@ -94,12 +97,14 @@ export default class PostMessageSocket {
 			}
 
 			if (event.source) {
+				console.log(response);
 				this.#targetWindow.postMessage(JSON.stringify(response), "*");
 			}
 		};
 
 		try {
-			respond({ payload: await listener.callback(message.payload) });
+			const resp = await listener.callback(message.payload);
+			respond({ payload: resp});
 		} catch (error) {
 			respond({ error });
 		}
