@@ -1,6 +1,6 @@
 const config = {
-	"setupFilesAfterEnv": ["./test/unit/setupTests.js"] ,
-	"testEnvironment": "jsdom",
+	setupFilesAfterEnv: [ "./test/unit/setupTests.js" ],
+	testEnvironment: "jsdom",
 	moduleFileExtensions: [
 		"js",
 	],
@@ -19,8 +19,9 @@ const config = {
 	testURL: "http://localhost/",
 	collectCoverage: true,
 	collectCoverageFrom: [
-		"src/**/*.{js}",
+		"src/**/*.{js,jsx}",
 		"!**/node_modules/**",
+		"!**/vendor/**",
 	],
 	coverageReporters: [
 		"text",
