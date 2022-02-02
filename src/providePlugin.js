@@ -39,11 +39,7 @@ export default function providePlugin({ settings = {}, hookNames = [], methods =
 
 			const hookFunctions = hookNames.reduce((hooks, hookName) => {
 				if (!config.hooks.includes(hookName)) {
-					socket.sendMessage({error: `The following hook is not configured: ${hookName}`});
-					return {
-						...hooks,
-					};
-					// throw new Error(`The following hook is not configured: ${hookName}`);
+					throw new Error(`The following hook is not configured: ${hookName}`);
 				}
 				return {
 					...hooks,

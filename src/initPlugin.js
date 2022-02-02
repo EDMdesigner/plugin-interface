@@ -16,6 +16,7 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
 	container.appendChild(pluginIframe);
 
 	const socket = new PostMessageSocket(window, pluginIframe.contentWindow);
+	window.initSocket = socket;
 
 	return new Promise((resolve) => {
 		socket.addListener("domReady", onDomReady, { once: true });
