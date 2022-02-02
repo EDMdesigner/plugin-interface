@@ -131,12 +131,14 @@ describe("set up postMessageSocket environments", () => {
 			iframeSocket = new PostMessageSocket(pluginIframe.contentWindow, window);
 		});
 		afterEach(async function () {
-			windowSocket.terminate();
+			await windowSocket.terminate();
+			await iframeSocket.terminate();
+			await new Promise(resolve => setTimeout(resolve, 100));
 			await new Promise(resolve => setTimeout(resolve, 100));
 			windowSocket = null;
-			iframeSocket.terminate();
-			await new Promise(resolve => setTimeout(resolve, 100));
 			iframeSocket = null;
+			removeFixEvents(window);
+			removeFixEvents(pluginIframe.contentWindow);
 			messages.length = 0;
 		});
 
@@ -167,19 +169,15 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.addListener(testWindowSocket, messageCallback);
 			iframeSocket.addListener(testiframeSocketSocket, messageCallback);
 
-			windowSocket.sendRequest(testiframeSocketSocket, messageOne);
-			iframeSocket.sendRequest(testWindowSocket, messageTwo);
-			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await windowSocket.sendRequest(testiframeSocketSocket, messageOne);
+			await iframeSocket.sendRequest(testWindowSocket, messageTwo);
 
 			expect(messages).toHaveLength(2);
 			expect(messages[0]).toBe(messageOne);
 			expect(messages[1]).toBe(messageTwo);
 
-			windowSocket.sendRequest(testiframeSocketSocket, messageOne);
-			iframeSocket.sendRequest(testWindowSocket, messageTwo);
-			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await windowSocket.sendRequest(testiframeSocketSocket, messageOne);
+			await iframeSocket.sendRequest(testWindowSocket, messageTwo);
 
 			expect(messages).toHaveLength(4);
 			expect(messages[2]).toBe(messageOne);

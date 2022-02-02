@@ -41,18 +41,19 @@ export default class PostMessageSocket {
 
 	#waitForResponse(msgId) {
 		return new Promise((resolve, reject) => {
-			const waitForResponse = (handlerFn, event) => {
+			const waitForResponse = (event) => {
 				if (event.source !== this.#targetWindow) return;
 
 				const index = this.#appliedEventListeners.findIndex(hadler => hadler._id === msgId);
 				if (index === -1) return;
+				const listener = this.#appliedEventListeners[index];
 
 				try {
 					const response = this.#tryParse(event);
 					if (response.msgId !== msgId) return;
 
 					event.stopPropagation();
-					this.#currentWindow.removeEventListener("message", handlerFn, true);
+					this.#currentWindow.removeEventListener("message", listener.handler, listener.useCapture);
 					this.#appliedEventListeners.splice(index, 1);
 
 					if (response.error) {
@@ -61,13 +62,13 @@ export default class PostMessageSocket {
 						resolve(response.payload);
 					}
 				} catch (error) {
-					this.#currentWindow.removeEventListener("message", handlerFn, true);
+					this.#currentWindow.removeEventListener("message", listener.handler, listener.useCapture);
 					this.#appliedEventListeners.splice(index, 1);
 					reject(new Error(error));
 				}
 			};
 			const handler = waitForResponse.bind(this);
-			this.#currentWindow.addEventListener("message", waitForResponse.bind(this, handler));
+			this.#currentWindow.addEventListener("message", handler, true);
 			this.#appliedEventListeners.push({ _id: msgId, handler, useCapture: true });
 		});
 	}
@@ -111,7 +112,7 @@ export default class PostMessageSocket {
 	#setupSocket() {
 		function* msgIdGenerator() {
 			let msgId = 0;
-			while (this.#currentWindow) {
+			while (this.#currentWindow && !this.#isTerminated) {
 				yield `${msgId++}-${new Date().getTime()}`;
 			}
 		}

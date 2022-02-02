@@ -41,7 +41,7 @@ export default function providePlugin({ settings = {}, hookNames = [], methods =
 				return {
 					...hooks,
 					[hookName]: async (payload) => {
-						if (!config.hookNames.includes(hookName)) {
+						if (!config.hooks.includes(hookName)) {
 							throw new Error(`The following hook is not configured: ${hookName}`);
 						}
 
