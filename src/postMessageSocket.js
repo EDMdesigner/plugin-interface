@@ -1,14 +1,9 @@
 export default class PostMessageSocket {
 	#currentWindow;
-
 	#targetWindow;
-
 	#listeners = {};
-
 	#msgIdGenerator;
-
 	#appliedEventListeners = [];
-
 	#isTerminated = false;
 
 	constructor(currentWindow, targetWindow) {
