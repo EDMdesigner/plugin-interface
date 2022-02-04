@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import initPlugin from "./initPlugin.js";
+import InitPlugin from "./initPlugin.js";
 
 export default async function initFullscreenPlugin({ id, src, data, settings, hooks }) {
 	let container = document.createElement("div");
@@ -78,11 +78,29 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		iframe.style.height = "100%";
 	}
 
-	const plugin = await initPlugin({ container, src, data, settings, hooks }, { beforeInit });
+	// eslint-disable-next-line no-shadow
+	function createPluginIframe({ container, src }, beforeInit) {
+		const pluginIframe = document.createElement("iframe");
+		pluginIframe.src = src;
+		pluginIframe.allowFullscreen = "allowfullscreen";
+
+		if (typeof beforeInit === "function") {
+			beforeInit({ container, iframe: pluginIframe });
+		}
+		container.appendChild(pluginIframe);
+
+		return pluginIframe;
+	}
+
+	const pluginIframe = createPluginIframe({ container, src }, beforeInit);
+
+	const pluginInterface = new InitPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow);
+	const plugin = await pluginInterface.init();
 
 	return {
 		...plugin,
-
+		_container: container,
+		_src: src,
 		showSplashScreen,
 		hideSplashScreen,
 		show,

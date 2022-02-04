@@ -48,8 +48,6 @@ describe("set up postMessageSocket environments", () => {
 			await new Promise(resolve => setTimeout(resolve, 100));
 			windowSocket = null;
 			iframeSocket = null;
-			removeFixEvents(window);
-			removeFixEvents(pluginIframe.contentWindow);
 			messages.length = 0;
 		});
 

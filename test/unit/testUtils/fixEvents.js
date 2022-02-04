@@ -16,11 +16,11 @@ function fixEvents(currentWindow, targetWindow, event) {
 let fixEventsBinded;
 function addFixEvents(currentWindow, targetWindow) {
 	fixEventsBinded = fixEvents.bind(null, currentWindow, targetWindow);
-	currentWindow.addEventListener("message", fixEventsBinded);
+	currentWindow.addEventListener("message", fixEventsBinded, true);
 }
 
 function removeFixEvents(windowObject) {
-	windowObject.removeEventListener("message", fixEventsBinded);
+	windowObject.removeEventListener("message", fixEventsBinded, true);
 }
 
 export { addFixEvents, removeFixEvents };

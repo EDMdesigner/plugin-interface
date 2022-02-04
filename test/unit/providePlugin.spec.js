@@ -3,218 +3,172 @@
 // const jsdom = require("jsdom");
 import PostMessageSocket from "../../src/postMessageSocket";
 import providePlugin from "../../src/providePlugin";
+import { addFixEvents, removeFixEvents } from "./testUtils/fixEvents";
+import { sideEffectsMapper, createEventListenerSpy, resetJSDOM } from "./testUtils/jsdomReset";
 
-// workaround for https://github.com/jsdom/jsdom/issues/2745
-// if no origin exists, replace it with the right targetWindow
-function fixEvents(currentWindow, targetWindow, event) {
-	if (!event.origin || event.origin === "" || event.origin === null) {
-		event.stopImmediatePropagation();
-		const eventWithOrigin = new MessageEvent("message", {
-			data: event.data,
-			origin: targetWindow,
-			source: targetWindow,
+describe("provide plugin tests", function () {
+	const sideEffects = sideEffectsMapper(window, document);
+	beforeAll(() => {
+		createEventListenerSpy(sideEffects);
+	});
+	beforeEach(() => {
+		resetJSDOM(document, sideEffects);
+	});
+
+	describe("providePlugin", () => {
+		let pluginIframe;
+		let body;
+		let windowSocket;
+		const messages = [];
+		const errors = [];
+
+		const hooks = ["onResetButtonClicked", "onSaveButtonClicked", "onClose"];
+
+		beforeEach(function () {
+			pluginIframe = document.createElement("iframe");
+			pluginIframe.src = "";
+			pluginIframe.allowFullscreen = "allowfullscreen";
+			body = document.querySelector("body");
+			body.appendChild(pluginIframe);
+
+			windowSocket = new PostMessageSocket(window, pluginIframe.contentWindow);
+			windowSocket.addListener("error", payload => errors.push(payload));
+			addFixEvents(window, pluginIframe.contentWindow);
+			addFixEvents(pluginIframe.contentWindow, window);
 		});
-		currentWindow.dispatchEvent(eventWithOrigin);
-	}
-}
 
-let fixEventsBinded;
-function addFixEvents(currentWindow, targetWindow) {
-	fixEventsBinded = fixEvents.bind(null, currentWindow, targetWindow);
-	currentWindow.addEventListener("message", fixEventsBinded);
-}
+		afterEach(async function () {
+			await windowSocket.terminate();
+			removeFixEvents(window);
+			removeFixEvents(pluginIframe.contentWindow);
+			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 100));
+			windowSocket = null;
+			messages.length = 0;
+			errors.length = 0;
+		});
 
-// function removeFixEvents(windowObject) {
-// 	windowObject.removeEventListener("message", fixEventsBinded);
-// }
+		it("send domReady postmessage and receive an init message", async function () {
+			windowSocket.addListener("domReady", (payload) => {
+				messages.push(payload);
+				windowSocket.sendMessage("init");
+			}, { once: true });
 
-const sideEffects = {
-	document: {
-		addEventListener: {
-			fn: document.addEventListener,
-			refs: [],
-		},
-		keys: Object.keys(document),
-	},
-	window: {
-		addEventListener: {
-			fn: window.addEventListener,
-			refs: [],
-		},
-		keys: Object.keys(window),
-	},
-};
+			const plugin = await providePlugin({}, pluginIframe.contentWindow, window);
 
-// Lifecycle Hooks
-// -----------------------------------------------------------------------------
-beforeAll(() => {
-	// Spy addEventListener
-	["document", "window"].forEach((obj) => {
-		const fn = sideEffects[obj].addEventListener.fn;
-		const refs = sideEffects[obj].addEventListener.refs;
+			expect(plugin.data).toBe(null);
+			expect(!!plugin.hooks).toBe(true);
+			expect(plugin.settings).toBe(null);
 
-		function addEventListenerSpy(type, listener, options) {
-			// Store listener reference so it can be removed during reset
-			refs.push({ type, listener, options });
-			// Call original window.addEventListener
-			fn(type, listener, options);
-		}
+			expect(messages).toHaveLength(1);
+		});
 
-		// Add to default key array to prevent removal during reset
-		sideEffects[obj].keys.push("addEventListener");
+		it("no error message if all hooks set in the init message", async function () {
+			windowSocket.addListener("domReady", (payload) => {
+				const hooksFn = {};
+				payload.config.hooks.forEach((hook) => {
+					hooksFn[hook] = (data) => {
+						return new Promise((resolve) => {
+							resolve(data);
+						});
+					};
+				});
+				windowSocket.sendMessage("init", {
+					data: "Data from init",
+					settings: { test: true },
+					hooks: Object.keys(hooksFn),
+				});
+			}, { once: true });
 
-		// Replace addEventListener with mock
-		global[obj].addEventListener = addEventListenerSpy;
-	});
-});
+			const plugin = await providePlugin({
+				data: "This is the data",
+				settings: { isButtonClickable: true },
+				hooks,
+				methods: {
+					test() {
+						return "test";
+					},
+				},
+			}, pluginIframe.contentWindow, window);
 
-// Reset JSDOM. This attempts to remove side effects from tests, however it does
-// not reset all changes made to globals like the window and document
-// objects. Tests requiring a full JSDOM reset should be stored in separate
-// files, which is only way to do a complete JSDOM reset with Jest.
-beforeEach(() => {
-	const rootElm = document.documentElement;
+			expect(plugin.data).toBe("Data from init");
+			expect(Object.keys(plugin.hooks)).toStrictEqual(["error", ...hooks]);
+			expect(!!plugin.settings.test).toBe(true);
+		});
 
-	// Remove attributes on root element
-	[ ...rootElm.attributes ].forEach(attr => rootElm.removeAttribute(attr.name));
-
-	// Remove elements (faster than setting innerHTML)
-	while (rootElm.firstChild) {
-		rootElm.removeChild(rootElm.firstChild);
-	}
-
-	// Remove global listeners and keys
-	["document", "window"].forEach((obj) => {
-		const refs = sideEffects[obj].addEventListener.refs;
-
-		// Listeners
-		while (refs.length) {
-			const { type, listener, options } = refs.pop();
-			global[obj].removeEventListener(type, listener, options);
-		}
-
-		// Keys
-		Object.keys(global[obj])
-			.filter(key => !sideEffects[obj].keys.includes(key))
-			.forEach((key) => {
-				delete global[obj][key];
+		it("send an error message if some hooks are not set", async function () {
+			windowSocket.addListener("error", (payload) => {
+				errors.push(payload);
 			});
-	});
 
-	// Restore base elements
-	rootElm.innerHTML = "<head></head><body></body>";
-});
-describe("providePlugin", () => {
-	let pluginIframe;
-	let body;
-	let windowSocket;
-	let iframeSocket;
+			windowSocket.addListener("domReady", () => {
+				windowSocket.sendMessage("init", {
+					data: "Data from init",
+					settings: { test: true },
+					hooks: [],
+				});
+			}, { once: true });
 
-	beforeEach(function () {
-		// jest.clearAllMocks();
-		// // eslint-disable-next-line no-shadow
-		// const jsdom = require("jsdom");
-		// const { window } = new jsdom.JSDOM('<body></body>');
+			const plugin = await providePlugin({
+				data: "This is the data",
+				settings: { isButtonClickable: true },
+				hooks,
+				methods: {
+					test() {
+						return "test";
+					},
+				},
+			}, pluginIframe.contentWindow, window);
 
-		// const dom = new JSDOM();
-		// global.document = dom.window.document;
-		// // eslint-disable-next-line no-global-assign
-		// document = dom.window.document;
-		// global.window = dom.window;
-		// // eslint-disable-next-line no-global-assign
-		// window = dom.window;
+			expect(plugin.data).toBe("Data from init");
+			expect(!!plugin.settings.test).toBe(true);
+			expect(Object.keys(plugin.hooks)).toStrictEqual([]);
 
+			const expectedErrors = ["error", ...hooks].map((hook) => {
+				return `The following hook is not set up: ${hook}`;
+			});
 
-		// // eslint-disable-next-line no-shadow
-		// // const jsdom = require("jsdom");
-		// const dom = new jsdom.JSDOM();
-		// global.document = dom.window.document;
-		// // eslint-disable-next-line no-global-assign
-		// document = dom.window.document;
-		// global.window = dom.window;
-		// // eslint-disable-next-line no-global-assign
-		// window = dom.window;
+			await new Promise(resolve => setTimeout(resolve, 100));
 
-		pluginIframe = document.createElement("iframe");
-		pluginIframe.src = "";
-		pluginIframe.allowFullscreen = "allowfullscreen";
-		body = document.querySelector("body");
-		body.appendChild(pluginIframe);
+			expect(errors).toHaveLength(4);
+			expect(errors.sort()).toStrictEqual(expectedErrors.sort());
+		});
 
-		windowSocket = new PostMessageSocket(window, pluginIframe.contentWindow);
-		addFixEvents(window, pluginIframe.contentWindow);
+		it("send an error message if finds an unknown hook", async function () {
+			windowSocket.addListener("error", (payload) => {
+				errors.push(payload);
+			});
 
-		iframeSocket = new PostMessageSocket(pluginIframe.contentWindow, window);
-		addFixEvents(pluginIframe.contentWindow, window);
-	});
+			windowSocket.addListener("domReady", (payload) => {
+				windowSocket.sendMessage("init", {
+					data: "Data from init",
+					settings: { test: true },
+					hooks: ["some-other-hook", ...payload.config.hooks],
+				});
+			}, { once: true });
 
-	it.todo("throws proper errors on improper data");
-	it.todo("with proper data, sends domready, throws error if not getting init call");
-	const timeout = 5000;
-	const hooks = {
-		testHook: () => {
-			console.log("testhook");
-		},
-	};
-	const data = {
-		title: "testTitle",
-		description: "testDescription",
-	};
-	const settings = {
-		background: "#abcdef",
-	};
-	function testMethod(testData) {
-		console.log(testData);
-	}
-	let domReadyResponse;
-	fit("with missing hook method, throws error", async () => {
-		windowSocket.addListener("domReady", onDomReady, { once: true });
+			const plugin = await providePlugin({
+				data: "This is the data",
+				settings: { isButtonClickable: true },
+				hooks,
+				methods: {
+					test() {
+						return "test";
+					},
+				},
+			}, pluginIframe.contentWindow, window);
 
-		async function onDomReady(payload) {
-			domReadyResponse = payload;
-			const initResponse = await windowSocket.sendRequest("init", { data, settings, hooks: [] }, { timeout });
-			console.log("INITRESPOOOOOOOOOOOOOOOOOOOOOONSE");
-			console.log(initResponse);
-		}
-		const iface = await providePlugin({
-			settings,
-			hookNames: [ "testHook" ],
-			methods: {
-				testMethod,
-			},
-		}, iframeSocket);
+			expect(plugin.data).toBe("Data from init");
+			expect(!!plugin.settings.test).toBe(true);
 
-		expect(domReadyResponse.config.settings).toEqual({ background: "#abcdef" });
-		expect(domReadyResponse.config.hookNames).toEqual([ "testHook" ]);
-		expect(domReadyResponse.config.methods).toEqual([ "testMethod" ]);
+			expect(Object.keys(plugin.hooks)).toStrictEqual(["error", ...hooks]);
 
-		expect(iface.data).toEqual({ title: "testTitle", description: "testDescription" });
-		expect(iface.settings).toEqual({ background: "#abcdef" });
-		expect(iface.hooks).toEqual({});
-		console.log(iface);
-	});
-	// felszetupol hookot ami nincs
-	it("with proper data, init properly", async () => {
-		windowSocket.addListener("domReady", onDomReady, { once: true });
+			await new Promise(resolve => setTimeout(resolve, 100));
 
-		async function onDomReady(payload) {
-			domReadyResponse = payload;
-			await windowSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
-		}
-		const iface = await providePlugin({
-			settings,
-			hookNames: [ "testHook" ],
-			methods: {
-				testMethod,
-			},
-		}, iframeSocket);
+			expect(errors.sort()).toStrictEqual([ "The following hook is not valid: some-other-hook" ].sort());
+		});
 
-		expect(domReadyResponse.config.settings).toEqual({ background: "#abcdef" });
-		expect(domReadyResponse.config.hookNames).toEqual([ "testHook" ]);
-		expect(domReadyResponse.config.methods).toEqual([ "testMethod" ]);
-
-		expect(iface.data).toEqual({ title: "testTitle", description: "testDescription" });
-		expect(iface.settings).toEqual({ background: "#abcdef" });
-		expect(typeof iface.hooks.testHook).toBe("function");
+		it.todo("can call the set up hooks");
+		it.todo("with proper data, sends domready, throws error if not getting init call");
 	});
 });

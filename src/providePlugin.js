@@ -1,62 +1,67 @@
-/* eslint-disable require-await */
-/* eslint-disable no-shadow */
-import PostMessageSocket from "./postMessageSocket.js";
+import PostMessageSocket from "./postMessageSocket";
 
-export default function providePlugin({ settings = {}, hookNames = [], methods = {} }, _socket = null) {
-	let socket = _socket;
-	if (!socket) {
-		socket = new PostMessageSocket(window, window.parent);
+export class PluginInterface extends PostMessageSocket {
+	#hooks;
+	#settings;
+	#methods;
+
+	constructor({ hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
+		super(currentWindow, targetWindow);
+		this.#hooks = ["error", ...hooks]; // WE ALWAYS PROVIDE THE ERROR HOOK, SINCE WE USE IT DURING INIT
+		this.#methods = methods;
 	}
 
-	async function sendDomReady() {
-		// await new Promise(resolve => setTimeout(resolve, 500));
-		socket.sendMessage("domReady", {
+	#sendDomReady() {
+		this.sendMessage("domReady", {
 			config: {
-				settings,
-				hookNames,
-				methods: Object.keys(methods),
+				settings: this.#settings,
+				hooks: this.#hooks,
+				methods: Object.keys(this.#methods),
 			},
 		});
-		document.removeEventListener("DOMContentLoaded", sendDomReady);
 	}
 
-	return new Promise((resolve) => {
-		// eslint-disable-next-line require-await
-		socket.addListener("init", onInit, { once: true });
-		if (document.readyState === "loading") {
-			document.addEventListener("DOMContentLoaded", sendDomReady);
-		} else {
-			sendDomReady();
-		}
-
-		async function onInit(config) {
-			function listenForRequests() {
-				Object.keys(methods).forEach((methodName) => {
-					socket.addListener(methodName, payload => methods[methodName](payload));
-				});
+	getInterface() {
+		Object.keys(this.#methods).forEach((methodName) => {
+			this.addListener(methodName, payload => this.#methods[methodName](payload));
+		});
+		return new Promise((resolve) => {
+			this.addListener("init", onInit.bind(this), { once: true });
+			if (this.getDocument().readyState === "loading") {
+				this.getDocument().addEventListener("DOMContentLoaded", this.#sendDomReady.bind(this), { once: true });
+			} else {
+				this.#sendDomReady.call(this);
 			}
 
-			listenForRequests();
+			function onInit({ data = null, settings = null, hooks = [] } = {}) {
+				const hookFunctions = {};
 
-			// await new Promise(resolve => setTimeout(resolve, 500));
+				hooks.forEach((hook) => {
+					if (!this.#hooks.includes(hook)) {
+						this.sendMessage("error", `The following hook is not valid: ${hook}`);
+						return;
+					}
+					hookFunctions[hook] = async (payload) => {
+						return await this.sendRequest(hook, payload);
+					};
+				});
 
-			const hookFunctions = hookNames.reduce((hooks, hookName) => {
-				if (!config.hooks.includes(hookName)) {
-					socket.sendMessage(`The following hook is not configured: ${hookName}`);
-				}
-				return {
-					...hooks,
-					[hookName]: async (payload) => {
-						return socket.sendRequest(hookName, payload);
-					},
-				};
-			}, {});
+				this.#hooks.forEach((hook) => {
+					if (hookFunctions[hook]) return;
+					this.sendMessage("error", `The following hook is not set up: ${hook}`);
+				});
 
-			resolve({
-				data: config.data,
-				settings: config.settings,
-				hooks: hookFunctions,
-			});
-		}
-	});
+				resolve({
+					data,
+					settings,
+					hooks: hookFunctions,
+				});
+			}
+		});
+	}
+}
+
+export default async function providePlugin({ settings = {}, hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
+	const plugin = new PluginInterface({ settings, hooks, methods }, currentWindow, targetWindow);
+	return await plugin.getInterface();
 }

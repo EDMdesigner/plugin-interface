@@ -12,6 +12,10 @@ export default class PostMessageSocket {
 		this.#setupSocket();
 	}
 
+	getDocument() {
+		return this.#currentWindow.document;
+	}
+
 	addListener(type, callback, { once = false } = {}) {
 		if (!this.#currentWindow) return;
 		this.#listeners[type] = { callback, once };
@@ -38,8 +42,6 @@ export default class PostMessageSocket {
 	#waitForResponse(msgId) {
 		return new Promise((resolve, reject) => {
 			const waitForResponse = (event) => {
-				console.log("HEREEEEEEE");
-				console.log(event);
 				if (event.source !== this.#targetWindow) return;
 
 				const index = this.#appliedEventListeners.findIndex(hadler => hadler._id === msgId);
@@ -73,7 +75,6 @@ export default class PostMessageSocket {
 
 	async #onMessage(event) {
 		if (!!event.source && event.source !== this.#targetWindow) return;
-
 		const message = this.#tryParse(event);
 		if (!message) return;
 
@@ -84,7 +85,7 @@ export default class PostMessageSocket {
 			const response = { msgId: message.msgId };
 
 			if (error) {
-				response.error = error.message || "Unexpected error";
+				response.error = typeof error === "string" ? error : error?.message || "Unexpected error";
 			} else {
 				response.payload = payload;
 			}
@@ -126,7 +127,8 @@ export default class PostMessageSocket {
 		try {
 			return JSON.parse(event.data);
 		} catch (err) {
-			throw new Error(err);
+			return null;
+			// throw new Error(err); // TODO: do we need this????
 		}
 	}
 
