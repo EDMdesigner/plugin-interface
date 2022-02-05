@@ -12,7 +12,7 @@
         <button id="closeButton">Close (cancel)</button>
         <script>
             (async function() {
-                const providePlugin = (await import("../../src/providePlugin.js")).default;
+                const createProvidePlugin = (await import("../../src/providePlugin.js")).default;
 
                 const data = {
                     title: "Default title",
@@ -38,7 +38,7 @@
                 }
 
             
-                const iface = await providePlugin({
+                const iface = await createProvidePlugin({
                     settings,
                     hooks: ["onResetButtonClicked", "onSaveButtonClicked", "onClose"],
                     methods: {

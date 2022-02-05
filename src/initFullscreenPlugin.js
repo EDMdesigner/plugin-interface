@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import InitPlugin from "./initPlugin.js";
+import createInitPlugin from "./initPlugin.js";
 
 export default async function initFullscreenPlugin({ id, src, data, settings, hooks }) {
 	let container = document.createElement("div");
@@ -94,8 +94,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 
 	const pluginIframe = createPluginIframe({ container, src }, beforeInit);
 
-	const pluginInterface = new InitPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow);
-	const plugin = await pluginInterface.init();
+	const plugin = await createInitPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow);
 
 	return {
 		...plugin,

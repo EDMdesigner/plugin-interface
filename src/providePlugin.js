@@ -2,7 +2,6 @@ import PostMessageSocket from "./postMessageSocket";
 
 export class PluginInterface extends PostMessageSocket {
 	#hooks;
-	#settings;
 	#methods;
 
 	constructor({ hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
@@ -14,7 +13,6 @@ export class PluginInterface extends PostMessageSocket {
 	#sendDomReady() {
 		this.sendMessage("domReady", {
 			config: {
-				settings: this.#settings,
 				hooks: this.#hooks,
 				methods: Object.keys(this.#methods),
 			},
@@ -61,7 +59,7 @@ export class PluginInterface extends PostMessageSocket {
 	}
 }
 
-export default async function providePlugin({ settings = {}, hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
-	const plugin = new PluginInterface({ settings, hooks, methods }, currentWindow, targetWindow);
+export default async function createProvidePlugin({ hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
+	const plugin = new PluginInterface({ hooks, methods }, currentWindow, targetWindow);
 	return await plugin.getInterface();
 }
