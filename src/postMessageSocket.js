@@ -76,10 +76,10 @@ export default class PostMessageSocket {
 	async #onMessage(event) {
 		if (!!event.source && event.source !== this.#targetWindow) return;
 		const message = this.#tryParse(event);
-		if (!message) return;
+		if (!message) return; // TODO: We have to renspond with an error or it will timeout
 
 		const listener = this.#listeners[message.type];
-		if (!listener) return;
+		if (!listener) return; // TODO: We have to renspond with an error or it will timeout
 
 		const respond = ({ error, payload }) => {
 			const response = { msgId: message.msgId };

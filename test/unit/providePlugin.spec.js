@@ -1,6 +1,3 @@
-// import "regenerator-runtime/runtime";
-// import JSDOM from "jsdom";
-// const jsdom = require("jsdom");
 import PostMessageSocket from "../../src/postMessageSocket";
 import providePlugin from "../../src/providePlugin";
 import { addFixEvents, removeFixEvents } from "./testUtils/fixEvents";
@@ -168,7 +165,62 @@ describe("provide plugin tests", function () {
 			expect(errors.sort()).toStrictEqual([ "The following hook is not valid: some-other-hook" ].sort());
 		});
 
-		it.todo("can call the set up hooks");
+		it("can call the hooks methods", async function () {
+			windowSocket.addListener("domReady", (payload) => {
+				const hooksFn = {};
+				payload.config.hooks.forEach((hook) => {
+					hooksFn[hook] = (data) => {
+						return new Promise((resolve) => {
+							resolve(data);
+						});
+					};
+				});
+				windowSocket.sendMessage("init", {
+					data: "Data from init",
+					settings: { test: true },
+					hooks: Object.keys(hooksFn),
+				});
+			}, { once: true });
+
+			const plugin = await providePlugin({
+				data: "This is the data",
+				settings: { isButtonClickable: true },
+				hooks,
+				methods: {
+					test() {
+						return "test";
+					},
+				},
+			}, pluginIframe.contentWindow, window);
+
+			windowSocket.addListener("error", (payload) => {
+				messages.push(payload);
+				return payload + "answer";
+			});
+			windowSocket.addListener("onResetButtonClicked", (payload) => {
+				messages.push(payload);
+				return payload + "answer";
+			});
+			windowSocket.addListener("onSaveButtonClicked", (payload) => {
+				messages.push(payload);
+				return payload + "answer";
+			});
+			windowSocket.addListener("onClose", (payload) => {
+				messages.push(payload);
+				return payload + "answer";
+			});
+
+			await plugin.hooks.error("test");
+			await plugin.hooks.onResetButtonClicked("test");
+			await plugin.hooks.onSaveButtonClicked("test");
+			await plugin.hooks.onClose("test");
+
+			expect(messages).toHaveLength(4);
+
+			expect(plugin.data).toBe("Data from init");
+			expect(Object.keys(plugin.hooks)).toStrictEqual(["error", ...hooks]);
+			expect(!!plugin.settings.test).toBe(true);
+		});
 		it.todo("with proper data, sends domready, throws error if not getting init call");
 	});
 });
