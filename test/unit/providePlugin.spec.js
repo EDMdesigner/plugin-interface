@@ -62,15 +62,15 @@ describe("provide plugin tests", function () {
 		});
 
 		it("no error message if all hooks set in the init message", async function () {
+			const hooksFn = {};
+			hooks.forEach((hook) => {
+				hooksFn[hook] = (data) => {
+					return new Promise((resolve) => {
+						resolve(data);
+					});
+				};
+			});
 			windowSocket.addListener("domReady", (payload) => {
-				const hooksFn = {};
-				payload.config.hooks.forEach((hook) => {
-					hooksFn[hook] = (data) => {
-						return new Promise((resolve) => {
-							resolve(data);
-						});
-					};
-				});
 				windowSocket.sendMessage("init", {
 					data: "Data from init",
 					settings: { test: true },
@@ -94,13 +94,13 @@ describe("provide plugin tests", function () {
 			expect(!!plugin.settings.test).toBe(true);
 		});
 
-		it("send an error message if some hooks are not set", async function () {
+		fit("send an error message if some hooks are not set", async function () {
 			const providedHooks = hooks;
 			windowSocket.addListener("domReady", () => {
 				windowSocket.sendMessage("init", {
 					data: "Data from init",
 					settings: { test: true },
-					hooks: [],
+					hooks: ["onClose"],
 				});
 			}, { once: true });
 
@@ -113,11 +113,13 @@ describe("provide plugin tests", function () {
 					}
 				});
 				if (requiredHooks.length) {
-					throw new Error(requiredHooks);
+					throw new Error(`THe following hooks are missing: ${requiredHooks}`);
 				}
 			}
 
-			const plugin = await providePlugin({
+			// const plugin = await ;
+
+			return expect(providePlugin({
 				settings: { isButtonClickable: true },
 				hooks,
 				methods: {
@@ -126,10 +128,8 @@ describe("provide plugin tests", function () {
 					},
 				},
 				validate: validator,
-			}, pluginIframe.contentWindow, window);
-
-			expect(plugin).rejects.toStrictEqual({
-				error: "The following hook is not set up: onResetButtonClicked",
+			}, pluginIframe.contentWindow, window)).rejects.toThrow({
+				error: `THe following hooks are missing: onResetButtonClicked, onSaveButtonClicked`,
 			});
 
 			// expect(plugin.data).toBe("Data from init");

@@ -57,7 +57,11 @@ export default class PostMessageSocket {
 					this.#appliedEventListeners.splice(index, 1);
 
 					if (response.error) {
-						reject(new Error(response.error));
+						if (typeof response.error === "string") {
+							console.log(response.error);
+							reject(new Error(response.error));
+						}
+						reject(new Error(response.error.message));
 					} else {
 						resolve(response.payload);
 					}
