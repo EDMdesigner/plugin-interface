@@ -13,7 +13,7 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validate
 		function sendDomReady() {
 			messageSocket.sendMessage("domReady", {
 				config: {
-					hooks,
+					hooks: providedHooks,
 					methods: Object.keys(methods),
 				},
 			});
