@@ -38,8 +38,8 @@ describe("provide plugin tests", function () {
 			await windowSocket.terminate();
 			removeFixEvents(window);
 			removeFixEvents(pluginIframe.contentWindow);
-			await new Promise(resolve => setTimeout(resolve, 100));
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
+			await new Promise(resolve => setTimeout(resolve, 0));
 			windowSocket = null;
 			messages.length = 0;
 			errors.length = 0;
@@ -125,7 +125,7 @@ describe("provide plugin tests", function () {
 				return `The following hook is not set up: ${hook}`;
 			});
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(errors).toHaveLength(4);
 			expect(errors.sort()).toStrictEqual(expectedErrors.sort());
@@ -160,7 +160,7 @@ describe("provide plugin tests", function () {
 
 			expect(Object.keys(plugin.hooks)).toStrictEqual(["error", ...hooks]);
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(errors.sort()).toStrictEqual([ "The following hook is not valid: some-other-hook" ].sort());
 		});

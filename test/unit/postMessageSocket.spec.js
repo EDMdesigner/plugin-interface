@@ -44,8 +44,8 @@ describe("set up postMessageSocket environments", () => {
 		afterEach(async function () {
 			await windowSocket.terminate();
 			await iframeSocket.terminate();
-			await new Promise(resolve => setTimeout(resolve, 100));
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
+			await new Promise(resolve => setTimeout(resolve, 0));
 			windowSocket = null;
 			iframeSocket = null;
 			messages.length = 0;
@@ -65,7 +65,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne);
 			iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
 			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(messages).toHaveLength(2);
 			expect(messages[0]).toBe(messageOne);
@@ -117,7 +117,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.sendRequest("random-type", messageOne);
 			iframeSocket.sendRequest("random-type", messageTwo);
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(messages).toHaveLength(0);
 		});
 
@@ -129,7 +129,7 @@ describe("set up postMessageSocket environments", () => {
 
 			pluginIframe.contentWindow.postMessage(JSON.stringify({ type: testiframeSocketSocket, payload: messageOne, msgId: "testMsg" }), "*");
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(messages).toHaveLength(0);
 
 			removeFixEvents(window);
@@ -168,7 +168,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.terminate();
 			iframeSocket.terminate();
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			windowSocket.addListener(testWindowSocketOnce, messageCallback, { once: true });
 			iframeSocket.addListener(testiframeSocketSocketOnce, messageCallback, { once: true });
@@ -176,7 +176,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne);
 			iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
 			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(messages).toHaveLength(0);
 		});
