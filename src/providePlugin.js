@@ -1,6 +1,6 @@
 import PostMessageSocket from "./postMessageSocket";
 
-export default function createProvidePlugin({ hooks = [], methods = {}, validation = null }, currentWindow = window, targetWindow = window.parent) {
+export default function createProvidePlugin({ hooks = [], methods = {}, validate = null }, currentWindow = window, targetWindow = window.parent) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	const providedHooks = hooks;
@@ -30,8 +30,8 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validati
 		// eslint-disable-next-line no-shadow
 		function onInit({ data = null, settings = null, hooks = [] } = {}) {
 
-			if(typeof validation === function) {
-				validation({ data = null, settings = null, hooks = [] })
+			if(typeof validate === function) {
+				validate({ data = null, settings = null, hooks = [] })
 			}
 
 			const hookFunctions = {};
