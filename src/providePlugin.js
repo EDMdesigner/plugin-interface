@@ -9,18 +9,18 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 		messageSocket.addListener(methodName, payload => methods[methodName](payload));
 	});
 
+	function sendDomReady() {
+		messageSocket.sendMessage("domReady", Object.keys(methods));
+	}
+
+	if (messageSocket.getDocument().readyState === "loading") {
+		messageSocket.getDocument().addEventListener("DOMContentLoaded", sendDomReady, { once: true });
+	} else {
+		sendDomReady();
+	}
+
 	return new Promise((resolve, reject) => {
-		function sendDomReady() {
-			messageSocket.sendMessage("domReady", {});
-		}
-
 		messageSocket.addListener("init", onInit, { once: true });
-
-		if (messageSocket.getDocument().readyState === "loading") {
-			messageSocket.getDocument().addEventListener("DOMContentLoaded", sendDomReady, { once: true });
-		} else {
-			sendDomReady();
-		}
 
 		// eslint-disable-next-line no-shadow
 		function onInit({ data = null, settings = null, hooks = [] } = {}) {
