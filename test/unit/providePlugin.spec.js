@@ -57,7 +57,6 @@ describe("provide plugin tests", function () {
 			expect(plugin.data).toBe(null);
 			expect(!!plugin.hooks).toBe(true);
 			expect(plugin.settings).toBe(null);
-
 			expect(messages).toHaveLength(1);
 		});
 
