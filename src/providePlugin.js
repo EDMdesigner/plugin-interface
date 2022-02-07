@@ -1,6 +1,6 @@
 import PostMessageSocket from "./postMessageSocket";
 
-export default function createProvidePlugin({ hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
+export default function createProvidePlugin({ hooks = [], methods = {}, validation = null }, currentWindow = window, targetWindow = window.parent) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	const providedHooks = hooks;
@@ -29,6 +29,11 @@ export default function createProvidePlugin({ hooks = [], methods = {} }, curren
 
 		// eslint-disable-next-line no-shadow
 		function onInit({ data = null, settings = null, hooks = [] } = {}) {
+
+			if(typeof validation === function) {
+				validation({ data = null, settings = null, hooks = [] })
+			}
+
 			const hookFunctions = {};
 
 			hooks.forEach((hook) => {
@@ -38,11 +43,6 @@ export default function createProvidePlugin({ hooks = [], methods = {} }, curren
 				hookFunctions[hook] = async (payload) => {
 					return await messageSocket.sendRequest(hook, payload);
 				};
-			});
-
-			providedHooks.forEach((hook) => {
-				if (hookFunctions[hook]) return;
-				throw new Error(`The following hook is not set up: ${hook}`);
 			});
 
 			resolve({
