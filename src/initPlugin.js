@@ -1,52 +1,32 @@
 import PostMessageSocket from "./postMessageSocket.js";
 
-export class InitPlugin extends PostMessageSocket {
-	#hooks;
-	#settings;
-	#data;
+export default function createInitPlugin({ data, settings, hooks }, currentWindow, targetWindow) {
+	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
-	constructor({ data = {}, settings = {},	hooks = {} }, currentWindow, targetWindow) {
-		super(currentWindow, targetWindow);
-		this.#data = data;
-		this.#settings = settings;
-		this.#hooks = hooks;
+	const initedHooks = hooks;
 
-		if (!this.#hooks.error) {
-			this.#hooks.error = (e) => {
-				throw new Error(e);
-			};
-		}
-	}
+	Object.keys(hooks).forEach((hook) => {
+		messageSocket.addListener(hook, payload => hooks[hook](payload));
+	});
 
-	init() {
-		return new Promise((resolve) => {
-			this.addListener("domReady", onDomReady.bind(this), { once: true });
+	return new Promise((resolve) => {
+		messageSocket.addListener("domReady", onDomReady, { once: true });
 
-			Object.keys(this.#hooks).forEach((hook) => {
-				this.addListener(hook, payload => this.#hooks[hook](payload));
+		function onDomReady(payload) {
+			messageSocket.sendMessage("init", { data, settings, hooks: Object.keys(initedHooks) });
+
+			const methods = {};
+			payload.config.methods.forEach((type) => {
+				methods[type] = async () => {
+					return await messageSocket.sendRequest(type, payload);
+				};
 			});
 
-			function onDomReady(payload) {
-				this.sendMessage("init", { data: this.#data, settings: this.#settings, hooks: Object.keys(this.#hooks) });
-
-				const methods = {};
-				payload.config.methods.forEach((type) => {
-					methods[type] = async (data) => {
-						return await this.sendRequest(type, data); // QA: Do we need here request? And async functionality???
-					};
-				});
-
-				resolve({
-					// _container: container,
-					// _iframe: pluginIframe,
-					methods,
-				});
-			}
-		});
-	}
-}
-
-export default async function createInitPlugin({ data, settings, hooks }, currentWindow, targetWindow) {
-	const pluginInterface = new InitPlugin({ data, settings, hooks }, currentWindow, targetWindow);
-	return await pluginInterface.init();
+			resolve({
+				// _container: container,
+				// _iframe: pluginIframe,
+				methods,
+			});
+		}
+	});
 }

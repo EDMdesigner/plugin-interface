@@ -1,65 +1,56 @@
 import PostMessageSocket from "./postMessageSocket";
 
-export class PluginInterface extends PostMessageSocket {
-	#hooks;
-	#methods;
+export default function createProvidePlugin({ hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
+	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
-	constructor({ hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
-		super(currentWindow, targetWindow);
-		this.#hooks = ["error", ...hooks]; // WE ALWAYS PROVIDE THE ERROR HOOK, SINCE WE USE IT DURING INIT
-		this.#methods = methods;
-	}
+	const providedHooks = hooks;
 
-	#sendDomReady() {
-		this.sendMessage("domReady", {
-			config: {
-				hooks: this.#hooks,
-				methods: Object.keys(this.#methods),
-			},
-		});
-	}
+	Object.keys(methods).forEach((methodName) => {
+		messageSocket.addListener(methodName, payload => methods[methodName](payload));
+	});
 
-	getInterface() {
-		Object.keys(this.#methods).forEach((methodName) => {
-			this.addListener(methodName, payload => this.#methods[methodName](payload));
-		});
-		return new Promise((resolve) => {
-			this.addListener("init", onInit.bind(this), { once: true });
-			if (this.getDocument().readyState === "loading") {
-				this.getDocument().addEventListener("DOMContentLoaded", this.#sendDomReady.bind(this), { once: true });
-			} else {
-				this.#sendDomReady.call(this);
-			}
+	return new Promise((resolve) => {
+		function sendDomReady() {
+			messageSocket.sendMessage("domReady", {
+				config: {
+					hooks,
+					methods: Object.keys(methods),
+				},
+			});
+		}
 
-			function onInit({ data = null, settings = null, hooks = [] } = {}) {
-				const hookFunctions = {};
+		messageSocket.addListener("init", onInit, { once: true });
 
-				hooks.forEach((hook) => {
-					if (!this.#hooks.includes(hook)) {
-						this.sendMessage("error", `The following hook is not valid: ${hook}`);
-						return;
-					}
-					hookFunctions[hook] = async (payload) => {
-						return await this.sendRequest(hook, payload);
-					};
-				});
+		if (messageSocket.getDocument().readyState === "loading") {
+			messageSocket.getDocument().addEventListener("DOMContentLoaded", sendDomReady, { once: true });
+		} else {
+			sendDomReady();
+		}
 
-				this.#hooks.forEach((hook) => {
-					if (hookFunctions[hook]) return;
-					this.sendMessage("error", `The following hook is not set up: ${hook}`);
-				});
+		// eslint-disable-next-line no-shadow
+		function onInit({ data = null, settings = null, hooks = [] } = {}) {
+			const hookFunctions = {};
 
-				resolve({
-					data,
-					settings,
-					hooks: hookFunctions,
-				});
-			}
-		});
-	}
-}
+			hooks.forEach((hook) => {
+				if (!providedHooks.includes(hook)) {
+					messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
+					return;
+				}
+				hookFunctions[hook] = async (payload) => {
+					return await messageSocket.sendRequest(hook, payload);
+				};
+			});
 
-export default async function createProvidePlugin({ hooks = [], methods = {} }, currentWindow = window, targetWindow = window.parent) {
-	const plugin = new PluginInterface({ hooks, methods }, currentWindow, targetWindow);
-	return await plugin.getInterface();
+			providedHooks.forEach((hook) => {
+				if (hookFunctions[hook]) return;
+				messageSocket.sendMessage("error", `The following hook is not set up: ${hook}`);
+			});
+
+			resolve({
+				data,
+				settings,
+				hooks: hookFunctions,
+			});
+		}
+	});
 }

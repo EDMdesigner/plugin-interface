@@ -38,8 +38,6 @@ describe("provide plugin tests", function () {
 			await windowSocket.terminate();
 			removeFixEvents(window);
 			removeFixEvents(pluginIframe.contentWindow);
-			await new Promise(resolve => setTimeout(resolve, 0));
-			await new Promise(resolve => setTimeout(resolve, 0));
 			windowSocket = null;
 			messages.length = 0;
 			errors.length = 0;
@@ -89,7 +87,7 @@ describe("provide plugin tests", function () {
 			}, pluginIframe.contentWindow, window);
 
 			expect(plugin.data).toBe("Data from init");
-			expect(Object.keys(plugin.hooks)).toStrictEqual(["error", ...hooks]);
+			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
 			expect(!!plugin.settings.test).toBe(true);
 		});
 
@@ -106,7 +104,7 @@ describe("provide plugin tests", function () {
 				});
 			}, { once: true });
 
-			const plugin = await providePlugin({
+			const plugin = providePlugin({
 				data: "This is the data",
 				settings: { isButtonClickable: true },
 				hooks,
@@ -117,17 +115,20 @@ describe("provide plugin tests", function () {
 				},
 			}, pluginIframe.contentWindow, window);
 
+			expect(await plugin).toThrow();
+
 			expect(plugin.data).toBe("Data from init");
 			expect(!!plugin.settings.test).toBe(true);
 			expect(Object.keys(plugin.hooks)).toStrictEqual([]);
 
-			const expectedErrors = ["error", ...hooks].map((hook) => {
+			const expectedErrors = hooks.map((hook) => {
 				return `The following hook is not set up: ${hook}`;
 			});
 
 			await new Promise(resolve => setTimeout(resolve, 0));
 
-			expect(errors).toHaveLength(4);
+			expect(errors).toHaveLength(3);
+
 			expect(errors.sort()).toStrictEqual(expectedErrors.sort());
 		});
 
@@ -158,7 +159,7 @@ describe("provide plugin tests", function () {
 			expect(plugin.data).toBe("Data from init");
 			expect(!!plugin.settings.test).toBe(true);
 
-			expect(Object.keys(plugin.hooks)).toStrictEqual(["error", ...hooks]);
+			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
 
 			await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -193,10 +194,6 @@ describe("provide plugin tests", function () {
 				},
 			}, pluginIframe.contentWindow, window);
 
-			windowSocket.addListener("error", (payload) => {
-				messages.push(payload);
-				return payload + "answer";
-			});
 			windowSocket.addListener("onResetButtonClicked", (payload) => {
 				messages.push(payload);
 				return payload + "answer";
@@ -210,17 +207,17 @@ describe("provide plugin tests", function () {
 				return payload + "answer";
 			});
 
-			await plugin.hooks.error("test");
 			await plugin.hooks.onResetButtonClicked("test");
 			await plugin.hooks.onSaveButtonClicked("test");
 			await plugin.hooks.onClose("test");
 
-			expect(messages).toHaveLength(4);
+			expect(messages).toHaveLength(3);
 
 			expect(plugin.data).toBe("Data from init");
-			expect(Object.keys(plugin.hooks)).toStrictEqual(["error", ...hooks]);
+			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
 			expect(!!plugin.settings.test).toBe(true);
 		});
+
 		it.todo("with proper data, sends domready, throws error if not getting init call");
 	});
 });

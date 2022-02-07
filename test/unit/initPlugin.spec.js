@@ -76,17 +76,6 @@ describe("provide plugin tests", function () {
 			});
 		});
 
-		it("creates error hookFunction when not provided", async function () {
-			delete hookFunction.error;
-
-			createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
-			const providePlugin = createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
-
-			await providePlugin.then((obj) => {
-				expect(!!obj.hooks.error).toBe(true);
-			});
-		});
-
 		it.todo("can call the hookFunction from providePlugin");
 	});
 });
