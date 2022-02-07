@@ -70,7 +70,7 @@ describe("provide plugin tests", function () {
 					});
 				};
 			});
-			windowSocket.addListener("domReady", (payload) => {
+			windowSocket.addListener("domReady", () => {
 				windowSocket.sendMessage("init", {
 					data: "Data from init",
 					settings: { test: true },
@@ -94,32 +94,31 @@ describe("provide plugin tests", function () {
 			expect(!!plugin.settings.test).toBe(true);
 		});
 
-		fit("send an error message if some hooks are not set", async function () {
+		it("send an error message if some hooks are not set", async function () {
 			const providedHooks = hooks;
 			windowSocket.addListener("domReady", () => {
 				windowSocket.sendMessage("init", {
 					data: "Data from init",
 					settings: { test: true },
-					hooks: ["onClose"],
+					hooks: [ "onClose" ],
 				});
 			}, { once: true });
+			const requiredHooks = [];
 
 			// eslint-disable-next-line no-shadow
-			function validator({ data, settings, hooks }) {
-				const requiredHooks = [];
+			function validator({ hooks }) {
 				providedHooks.forEach((hook) => {
 					if (!hooks.includes(hook)) {
 						requiredHooks.push(hook);
 					}
 				});
 				if (requiredHooks.length) {
-					throw new Error(`THe following hooks are missing: ${requiredHooks}`);
+					throw new Error(`The following hooks are missing: ${requiredHooks}`);
 				}
 			}
+			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked");
 
-			// const plugin = await ;
-
-			return expect(providePlugin({
+			await expect(providePlugin({
 				settings: { isButtonClickable: true },
 				hooks,
 				methods: {
@@ -127,32 +126,16 @@ describe("provide plugin tests", function () {
 						return "test";
 					},
 				},
-				validate: validator,
-			}, pluginIframe.contentWindow, window)).rejects.toThrow({
-				error: `THe following hooks are missing: onResetButtonClicked, onSaveButtonClicked`,
-			});
-
-			// expect(plugin.data).toBe("Data from init");
-			// expect(!!plugin.settings.test).toBe(true);
-			// expect(Object.keys(plugin.hooks)).toStrictEqual([]);
-
-			// const expectedErrors = hooks.map((hook) => {
-			// 	return `The following hook is not set up: ${hook}`;
-			// });
-
-			// await new Promise(resolve => setTimeout(resolve, 0));
-
-			// expect(errors).toHaveLength(3);
-
-			// expect(errors.sort()).toStrictEqual(expectedErrors.sort());
+				validator,
+			}, pluginIframe.contentWindow, window)).rejects.toStrictEqual(error);
 		});
 
 		it("send a warning if finds an unknown hook", async function () {
-			windowSocket.addListener("domReady", (payload) => {
+			windowSocket.addListener("domReady", () => {
 				windowSocket.sendMessage("init", {
 					data: "Data from init",
 					settings: { test: true },
-					hooks: ["some-other-hook", ...payload.config.hooks],
+					hooks: ["some-other-hook", ...hooks],
 				});
 			}, { once: true });
 
@@ -175,9 +158,9 @@ describe("provide plugin tests", function () {
 		});
 
 		it("can call the hooks methods", async function () {
-			windowSocket.addListener("domReady", (payload) => {
+			windowSocket.addListener("domReady", () => {
 				const hooksFn = {};
-				payload.config.hooks.forEach((hook) => {
+				hooks.forEach((hook) => {
 					hooksFn[hook] = (data) => {
 						return new Promise((resolve) => {
 							resolve(data);
@@ -225,7 +208,5 @@ describe("provide plugin tests", function () {
 			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
 			expect(!!plugin.settings.test).toBe(true);
 		});
-
-		it.todo("with proper data, sends domready, throws error if not getting init call");
 	});
 });
