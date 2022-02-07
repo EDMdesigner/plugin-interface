@@ -52,16 +52,11 @@ export default class PostMessageSocket {
 					const response = this.#tryParse(event);
 					if (response.msgId !== msgId) return;
 					event.stopPropagation();
-
 					this.#currentWindow.removeEventListener("message", listener.handler, listener.useCapture);
 					this.#appliedEventListeners.splice(index, 1);
 
 					if (response.error) {
-						if (typeof response.error === "string") {
-							console.log(response.error);
-							reject(new Error(response.error));
-						}
-						reject(new Error(response.error.message));
+						reject(new Error(response.error));
 					} else {
 						resolve(response.payload);
 					}

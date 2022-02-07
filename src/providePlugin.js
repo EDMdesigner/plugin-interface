@@ -1,6 +1,6 @@
 import PostMessageSocket from "./postMessageSocket";
 
-export default function createProvidePlugin({ hooks = [], methods = {}, validate = null }, currentWindow = window, targetWindow = window.parent) {
+export default function createProvidePlugin({ hooks = [], methods = {}, validator = null }, currentWindow = window, targetWindow = window.parent) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	const providedHooks = hooks;
@@ -9,7 +9,7 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validate
 		messageSocket.addListener(methodName, payload => methods[methodName](payload));
 	});
 
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		function sendDomReady() {
 			messageSocket.sendMessage("domReady", {});
 		}
@@ -24,26 +24,30 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validate
 
 		// eslint-disable-next-line no-shadow
 		function onInit({ data = null, settings = null, hooks = [] } = {}) {
-			if (typeof validate === "function") {
-				validate({ data, settings, hooks });
-			}
-
-			const hookFunctions = {};
-
-			hooks.forEach((hook) => {
-				if (!providedHooks.includes(hook)) {
-					return console.warn(`The following hook is not valid: ${hook}`);
+			try {
+				if (typeof validator === "function") {
+					validator({ data, settings, hooks });
 				}
-				hookFunctions[hook] = async (payload) => {
-					return await messageSocket.sendRequest(hook, payload);
-				};
-			});
 
-			resolve({
-				data,
-				settings,
-				hooks: hookFunctions,
-			});
+				const hookFunctions = {};
+
+				hooks.forEach((hook) => {
+					if (!providedHooks.includes(hook)) {
+						return console.warn(`The following hook is not valid: ${hook}`);
+					}
+					hookFunctions[hook] = async (payload) => {
+						return await messageSocket.sendRequest(hook, payload);
+					};
+				});
+
+				resolve({
+					data,
+					settings,
+					hooks: hookFunctions,
+				});
+			} catch (error) {
+				reject(error);
+			}
 		}
 	});
 }
