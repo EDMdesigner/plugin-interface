@@ -33,8 +33,7 @@ export default function createProvidePlugin({ hooks = [], methods = {} }, curren
 
 			hooks.forEach((hook) => {
 				if (!providedHooks.includes(hook)) {
-					messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
-					return;
+					return console.warn(`The following hook is not valid: ${hook}`);
 				}
 				hookFunctions[hook] = async (payload) => {
 					return await messageSocket.sendRequest(hook, payload);
@@ -43,7 +42,7 @@ export default function createProvidePlugin({ hooks = [], methods = {} }, curren
 
 			providedHooks.forEach((hook) => {
 				if (hookFunctions[hook]) return;
-				messageSocket.sendMessage("error", `The following hook is not set up: ${hook}`);
+				throw new Error(`The following hook is not set up: ${hook}`);
 			});
 
 			resolve({
