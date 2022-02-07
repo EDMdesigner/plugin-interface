@@ -57,20 +57,20 @@ describe("provide plugin tests", function () {
 			expect(plugin.data).toBe(null);
 			expect(!!plugin.hooks).toBe(true);
 			expect(plugin.settings).toBe(null);
-
 			expect(messages).toHaveLength(1);
 		});
 
 		it("no error message if all hooks set in the init message", async function () {
-			windowSocket.addListener("domReady", (payload) => {
-				const hooksFn = {};
-				payload.config.hooks.forEach((hook) => {
-					hooksFn[hook] = (data) => {
-						return new Promise((resolve) => {
-							resolve(data);
-						});
-					};
-				});
+			const hooksFn = {};
+			hooks.forEach((hook) => {
+				hooksFn[hook] = (data) => {
+					return new Promise((resolve) => {
+						resolve(data);
+					});
+				};
+			});
+
+			windowSocket.addListener("domReady", () => {
 				windowSocket.sendMessage("init", {
 					data: "Data from init",
 					settings: { test: true },
