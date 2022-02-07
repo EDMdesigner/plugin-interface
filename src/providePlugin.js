@@ -29,9 +29,8 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validate
 
 		// eslint-disable-next-line no-shadow
 		function onInit({ data = null, settings = null, hooks = [] } = {}) {
-
-			if(typeof validate === function) {
-				validate({ data = null, settings = null, hooks = [] })
+			if (typeof validate === "function") {
+				validate({ data, settings, hooks });
 			}
 
 			const hookFunctions = {};
