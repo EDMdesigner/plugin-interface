@@ -11,12 +11,7 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validate
 
 	return new Promise((resolve) => {
 		function sendDomReady() {
-			messageSocket.sendMessage("domReady", {
-				config: {
-					hooks,
-					methods: Object.keys(methods),
-				},
-			});
+			messageSocket.sendMessage("domReady", {});
 		}
 
 		messageSocket.addListener("init", onInit, { once: true });
