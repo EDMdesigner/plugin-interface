@@ -127,8 +127,7 @@ export default class PostMessageSocket {
 		try {
 			return JSON.parse(event.data);
 		} catch (err) {
-			return null;
-			// throw new Error(err); // TODO: do we need this????
+			throw new Error(err);
 		}
 	}
 
