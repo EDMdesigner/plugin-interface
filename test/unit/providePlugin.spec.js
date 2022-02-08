@@ -60,6 +60,33 @@ describe("provide plugin tests", function () {
 			expect(messages).toHaveLength(1);
 		});
 
+		it("send domReady postmessage and receive an init message, after waiting for loading", async function () {
+			windowSocket.addListener("domReady", (payload) => {
+				messages.push(payload);
+				windowSocket.sendMessage("init");
+			}, { once: true });
+
+			Object.defineProperty(pluginIframe.contentWindow.document, "readyState", {
+				get() {
+					return "loading";
+				},
+			});
+
+			setTimeout(() => {
+				pluginIframe.contentWindow.document.dispatchEvent(new Event("DOMContentLoaded", {
+					bubbles: true,
+					cancelable: true,
+				}));
+			}, 500);
+
+			const plugin = await providePlugin({}, pluginIframe.contentWindow, window);
+
+			expect(plugin.data).toBe(null);
+			expect(!!plugin.hooks).toBe(true);
+			expect(plugin.settings).toBe(null);
+			expect(messages).toHaveLength(1);
+		});
+
 		it("no error message if all hooks set in the init message", async function () {
 			const hooksFn = {};
 			hooks.forEach((hook) => {
