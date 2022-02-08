@@ -136,7 +136,7 @@ describe("provide plugin tests", function () {
 				}
 			}
 
-			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked", "error");
+			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked,error");
 			let methods;
 
 			try {
