@@ -21,7 +21,7 @@ describe("provide plugin tests", function () {
 		const messages = [];
 		const errors = [];
 
-		const hooks = ["onResetButtonClicked", "onSaveButtonClicked", "onClose"];
+		const hooks = ["onResetButtonClicked", "onSaveButtonClicked", "onClose", "error"];
 
 		beforeEach(function () {
 			pluginIframe = document.createElement("iframe");
@@ -136,7 +136,7 @@ describe("provide plugin tests", function () {
 				}
 			}
 
-			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked");
+			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked", "error");
 			let methods;
 
 			try {

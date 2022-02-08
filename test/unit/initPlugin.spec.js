@@ -15,6 +15,8 @@ describe("provide plugin tests", function () {
 	describe("providePlugin", () => {
 		let pluginIframe;
 		let body;
+		const warnings = [];
+		console.warn = payload => warnings.push(payload);
 		const messages = [];
 		const errors = [];
 
@@ -35,7 +37,6 @@ describe("provide plugin tests", function () {
 		};
 
 		function updateData(newData) {
-			console.log("CHANGE DATA");
 			data.title = newData.title;
 			data.description = newData.description;
 		}
@@ -90,17 +91,13 @@ describe("provide plugin tests", function () {
 			expect(data.description).toStrictEqual("New description");
 		});
 
-		it("can call the methods from providePlugin", async function () {
-			const initPlugin = createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+		it("console log warning for wrong hooks", async function () {
+			createInitPlugin({ data, settings, hooks: { "extra-hook": () => console.log("extra hook"), error: () => console.log("extra hook"), ...hookFunction } }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
-			await initPlugin.then((obj) => {
-				obj.methods.updateData({ title: "New title", description: "New description" });
-			});
+			await new Promise(resolve => setTimeout(resolve, 100));
 
-			await new Promise(resolve => setTimeout(resolve, 0));
-			expect(data.title).toStrictEqual("New title");
-			expect(data.description).toStrictEqual("New description");
+			expect(warnings).toHaveLength(1);
 		});
 	});
 });

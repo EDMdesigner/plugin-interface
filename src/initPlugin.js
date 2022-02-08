@@ -4,6 +4,7 @@ export default function createInitPlugin({ data, settings, hooks }, currentWindo
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	messageSocket.addListener("error", payload => console.warn(payload));
+
 	Object.keys(hooks).forEach((hook) => {
 		messageSocket.addListener(hook, payload => hooks[hook](payload));
 	});

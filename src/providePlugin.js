@@ -4,6 +4,9 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	const providedHooks = hooks;
+	if (!providedHooks.includes("error")) {
+		providedHooks.push("error");
+	}
 
 	Object.keys(methods).forEach((methodName) => {
 		messageSocket.addListener(methodName, payload => methods[methodName](payload));
@@ -32,6 +35,7 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 
 				hooks.forEach((hook) => {
 					if (!providedHooks.includes(hook)) {
+						console.log(`The following hook is not valid: ${hook}`);
 						return messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
 					}
 					hookFunctions[hook] = async (payload) => {
