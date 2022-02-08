@@ -29,7 +29,7 @@ export default class PostMessageSocket {
 		if (!this.#targetWindow && this.#isTerminated) return;
 		const msgId = this.#getNextMsgId();
 		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId, waitForResponse: false }), "*");
-		return this.#waitForResponse(msgId, false);
+		return this.#waitForResponse(msgId);
 	}
 
 	sendRequest(type, payload) {

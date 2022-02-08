@@ -19,7 +19,7 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 		sendDomReady();
 	}
 
-	return new Promise((resolve, reject) => {
+	return new Promise((resolveProvidePlugin, rejectProvidePlugin) => {
 		messageSocket.addListener("init", onInit, { once: true });
 
 		// eslint-disable-next-line no-shadow
@@ -28,28 +28,26 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 				if (typeof validator === "function") {
 					validator({ data, settings, hooks });
 				}
-
 				const hookFunctions = {};
 
 				hooks.forEach((hook) => {
 					if (!providedHooks.includes(hook)) {
-						return console.warn(`The following hook is not valid: ${hook}`);
+						messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
 					}
 					hookFunctions[hook] = async (payload) => {
 						return await messageSocket.sendRequest(hook, payload);
 					};
 				});
 
-				resolve({
+				resolveProvidePlugin({
 					data,
 					settings,
 					hooks: hookFunctions,
 				});
 			} catch (error) {
-				reject(error);
-				return error;
+				rejectProvidePlugin(error);
+				throw new Error(error.message);
 			}
-
 			return Object.keys(methods);
 		}
 	});

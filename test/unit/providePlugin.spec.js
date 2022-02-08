@@ -122,13 +122,6 @@ describe("provide plugin tests", function () {
 
 		it("send an error message if some hooks are not set", async function () {
 			const providedHooks = hooks;
-			windowSocket.addListener("domReady", () => {
-				windowSocket.sendMessage("init", {
-					data: "Data from init",
-					settings: { test: true },
-					hooks: [ "onClose" ],
-				});
-			}, { once: true });
 			const requiredHooks = [];
 
 			// eslint-disable-next-line no-shadow
@@ -142,18 +135,36 @@ describe("provide plugin tests", function () {
 					throw new Error(`The following hooks are missing: ${requiredHooks}`);
 				}
 			}
-			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked");
 
-			await expect(providePlugin({
-				settings: { isButtonClickable: true },
-				hooks,
-				methods: {
-					test() {
-						return "test";
+			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked");
+			let methods;
+
+			try {
+				windowSocket.addListener("domReady", () => {
+					methods = windowSocket.sendRequest("init", {
+						data: "Data from init",
+						settings: { test: true },
+						hooks: [ "onClose" ],
+					});
+				}, { once: true });
+
+				// eslint-disable-next-line no-shadow
+
+				await providePlugin({
+					settings: { isButtonClickable: true },
+					hooks,
+					methods: {
+						test() {
+							return "test";
+						},
 					},
-				},
-				validator,
-			}, pluginIframe.contentWindow, window)).rejects.toStrictEqual(error);
+					validator,
+				}, pluginIframe.contentWindow, window);
+			} catch (e) {
+				// eslint-disable-next-line jest/no-conditional-expect
+				expect(e).toStrictEqual(error);
+			}
+			await expect(methods).rejects.toStrictEqual(error);
 		});
 
 		it("send a warning if finds an unknown hook", async function () {
