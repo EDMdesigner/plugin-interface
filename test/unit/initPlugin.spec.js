@@ -19,10 +19,8 @@ describe("provide plugin tests", function () {
 		console.warn = payload => warnings.push(payload);
 		const messages = [];
 		const errors = [];
-
 		const hooks = ["onResetButtonClicked", "onSaveButtonClicked", "onClose"];
 		const hookFunction = {
-			error: data => errors.push(data),
 		};
 		hooks.forEach((hook) => {
 			hookFunction[hook] = data => messages.push(data);
@@ -91,13 +89,20 @@ describe("provide plugin tests", function () {
 			expect(data.description).toStrictEqual("New description");
 		});
 
-		it("console log warning for wrong hooks", async function () {
-			createInitPlugin({ data, settings, hooks: { "extra-hook": () => console.log("extra hook"), error: () => console.log("extra hook"), ...hookFunction } }, window, pluginIframe.contentWindow);
+		it("console.warn for wrong hooks", async function () {
+			createInitPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
-			await new Promise(resolve => setTimeout(resolve, 100));
-
+			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(warnings).toHaveLength(1);
+		});
+
+		it("can call the set up hook from providePlugin", async function () {
+			createInitPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
+			const providePlugin = await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
+			await providePlugin.hooks.onResetButtonClicked("data");
+
+			expect(messages).toHaveLength(1);
 		});
 	});
 });

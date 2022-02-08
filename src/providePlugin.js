@@ -28,6 +28,9 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 		// eslint-disable-next-line no-shadow
 		function onInit({ data = null, settings = null, hooks = [] } = {}) {
 			try {
+				if (!hooks.includes("error")) {
+					hooks.push("error");
+				}
 				if (typeof validator === "function") {
 					validator({ data, settings, hooks });
 				}
@@ -35,7 +38,6 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 
 				hooks.forEach((hook) => {
 					if (!providedHooks.includes(hook)) {
-						console.log(`The following hook is not valid: ${hook}`);
 						return messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
 					}
 					hookFunctions[hook] = async (payload) => {
