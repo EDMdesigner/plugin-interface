@@ -35,6 +35,7 @@ describe("provide plugin tests", function () {
 		};
 
 		function updateData(newData) {
+			console.log("CHANGE DATA");
 			data.title = newData.title;
 			data.description = newData.description;
 		}
@@ -76,6 +77,30 @@ describe("provide plugin tests", function () {
 			});
 		});
 
-		it.todo("can call the methods from providePlugin");
+		it("can call the methods from providePlugin", async function () {
+			const initPlugin = createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
+
+			await initPlugin.then((obj) => {
+				obj.methods.updateData({ title: "New title", description: "New description" });
+			});
+
+			await new Promise(resolve => setTimeout(resolve, 0));
+			expect(data.title).toStrictEqual("New title");
+			expect(data.description).toStrictEqual("New description");
+		});
+
+		it("can call the methods from providePlugin", async function () {
+			const initPlugin = createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
+
+			await initPlugin.then((obj) => {
+				obj.methods.updateData({ title: "New title", description: "New description" });
+			});
+
+			await new Promise(resolve => setTimeout(resolve, 0));
+			expect(data.title).toStrictEqual("New title");
+			expect(data.description).toStrictEqual("New description");
+		});
 	});
 });

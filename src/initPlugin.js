@@ -11,9 +11,10 @@ export default function createInitPlugin({ data, settings, hooks }, currentWindo
 	return new Promise((resolve) => {
 		messageSocket.addListener("domReady", onDomReady, { once: true });
 		async function onDomReady() {
-			const methods = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
+			const answer = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
+			const methods = {};
 
-			methods.forEach((type) => {
+			answer.forEach((type) => {
 				methods[type] = async (payload) => {
 					return await messageSocket.sendRequest(type, payload);
 				};
