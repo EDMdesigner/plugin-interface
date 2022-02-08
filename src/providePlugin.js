@@ -32,7 +32,7 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 
 				hooks.forEach((hook) => {
 					if (!providedHooks.includes(hook)) {
-						messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
+						return messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
 					}
 					hookFunctions[hook] = async (payload) => {
 						return await messageSocket.sendRequest(hook, payload);

@@ -76,6 +76,6 @@ describe("provide plugin tests", function () {
 			});
 		});
 
-		it.todo("can call the hookFunction from providePlugin");
+		it.todo("can call the methods from providePlugin");
 	});
 });

@@ -168,6 +168,10 @@ describe("provide plugin tests", function () {
 		});
 
 		it("send a warning if finds an unknown hook", async function () {
+			windowSocket.addListener("error", function (error) {
+				console.warn(error);
+			});
+
 			windowSocket.addListener("domReady", () => {
 				windowSocket.sendMessage("init", {
 					data: "Data from init",
@@ -189,6 +193,9 @@ describe("provide plugin tests", function () {
 
 			expect(plugin.data).toBe("Data from init");
 			expect(!!plugin.settings.test).toBe(true);
+
+			// you have to wait for the request inside providePlugin
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
 			expect(warnings).toHaveLength(1);

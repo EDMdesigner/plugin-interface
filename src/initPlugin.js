@@ -3,7 +3,8 @@ import PostMessageSocket from "./postMessageSocket.js";
 export default function createInitPlugin({ data, settings, hooks }, currentWindow, targetWindow) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
-	Object.keys([{ error: payload => console.warn(payload) }, ...hooks]).forEach((hook) => {
+	messageSocket.addListener("error", payload => console.warn(payload));
+	Object.keys(hooks).forEach((hook) => {
 		messageSocket.addListener(hook, payload => hooks[hook](payload));
 	});
 
