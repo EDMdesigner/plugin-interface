@@ -47,7 +47,10 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 				});
 			} catch (error) {
 				reject(error);
+				return error;
 			}
+
+			return Object.keys(methods);
 		}
 	});
 }
