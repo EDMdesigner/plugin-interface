@@ -1,6 +1,6 @@
 import PostMessageSocket from "./postMessageSocket";
 
-export default function createProvidePlugin({ hooks = [], methods = {}, validator = null }, currentWindow = window, targetWindow = window.parent) {
+export default function createProvidePlugin({ hooks = [], methods = {}, validator = null } = {}, currentWindow = window, targetWindow = window.parent) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	const providedHooks = hooks;
