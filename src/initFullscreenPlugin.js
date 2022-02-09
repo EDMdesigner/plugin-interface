@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import createInitPlugin, { createPluginIframe } from "./initPlugin.js";
+import { createIframeAndInitPlugin } from "./initPlugin.js";
 
 export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit, timeout }) {
 	let container = document.createElement("div");
@@ -74,14 +74,13 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	let _beforeInit = beforeInit;
 
 	if (!_beforeInit || typeof _beforeInit !== "function") {
-		_beforeInit = function ({ container, iframe }) {
+		_beforeInit = function ({ iframe }) {
 			iframe.style.width = "100%";
 			iframe.style.height = "100%";
 		};
 	}
 
-	const pluginIframe = createPluginIframe({ container, src }, beforeInit);
-	const { methods } = await createInitPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow);
+	const { methods } = await createIframeAndInitPlugin({ data, settings, hooks }, { container, src }, beforeInit);
 
 	return {
 		methods,
