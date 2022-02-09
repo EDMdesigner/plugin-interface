@@ -107,6 +107,21 @@ describe("set up postMessageSocket environments", () => {
 			expect(answer2).toBe("hello world" + " from this side.");
 		});
 
+		it("can send request and sends error if couldnt parse the response", async function () {
+			iframeSocket.addListener("hook", async () => {
+				window.postMessage("bad data", "*");
+				await new Promise(resolve => setTimeout(resolve, 0));
+				return { run: true };
+			});
+
+			expect(async () => {
+				await windowSocket.sendRequest("hook", "hello world");
+			}).not.toThrow();
+			const response = await windowSocket.sendRequest("hook", "hello world");
+
+			expect(response).toEqual({ run: true });
+		});
+
 		it("with a NOT matching type the callback is not fired", async function () {
 			windowSocket.addListener(testWindowSocket, messageCallback);
 			iframeSocket.addListener(testiframeSocketSocket, messageCallback);
