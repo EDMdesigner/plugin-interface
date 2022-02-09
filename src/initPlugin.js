@@ -1,7 +1,22 @@
 import PostMessageSocket from "./postMessageSocket.js";
 
-export default function createInitPlugin({ data, settings, hooks }, currentWindow, targetWindow) {
-	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
+export default function createInitPlugin({ data, settings, hooks }, { container, src }, beforeInit) {
+	// eslint-disable-next-line no-shadow
+	function createPluginIframe({ container, src }, beforeInit) {
+		const pluginIframe = document.createElement("iframe");
+		pluginIframe.src = src;
+		pluginIframe.allowFullscreen = "allowfullscreen";
+
+		if (typeof beforeInit === "function") {
+			beforeInit({ container, iframe: pluginIframe });
+		}
+		container.appendChild(pluginIframe);
+
+		return pluginIframe;
+	}
+	const pluginIframe = createPluginIframe({ container, src }, beforeInit);
+
+	const messageSocket = new PostMessageSocket(window, pluginIframe.contentWindow);
 
 	messageSocket.addListener("error", payload => console.warn(payload));
 

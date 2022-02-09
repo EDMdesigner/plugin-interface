@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import createInitPlugin from "./initPlugin.js";
 
-export default async function initFullscreenPlugin({ id, src, data, settings, hooks }) {
+export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit, timeout }) {
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
@@ -71,33 +71,19 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		container = null;
 	}
 
-	// eslint-disable-next-line no-unused-vars
-	// eslint-disable-next-line no-shadow
-	function beforeInit({ container, iframe }) {
-		iframe.style.width = "100%";
-		iframe.style.height = "100%";
+	let _beforeInit = beforeInit;
+
+	if (!_beforeInit || typeof _beforeInit !== "function") {
+		_beforeInit = function ({ container, iframe }) {
+			iframe.style.width = "100%";
+			iframe.style.height = "100%";
+		};
 	}
 
-	// eslint-disable-next-line no-shadow
-	function createPluginIframe({ container, src }, beforeInit) {
-		const pluginIframe = document.createElement("iframe");
-		pluginIframe.src = src;
-		pluginIframe.allowFullscreen = "allowfullscreen";
-
-		if (typeof beforeInit === "function") {
-			beforeInit({ container, iframe: pluginIframe });
-		}
-		container.appendChild(pluginIframe);
-
-		return pluginIframe;
-	}
-
-	const pluginIframe = createPluginIframe({ container, src }, beforeInit);
-
-	const plugin = await createInitPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow);
+	const { methods } = await createInitPlugin({ data, settings, hooks }, { container, src, beforeInit: _beforeInit });
 
 	return {
-		...plugin,
+		methods,
 		_container: container,
 		_src: src,
 		showSplashScreen,
