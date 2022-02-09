@@ -80,7 +80,22 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		};
 	}
 
-	const { methods } = await createInitPlugin({ data, settings, hooks }, { container, src, beforeInit: _beforeInit });
+	function createPluginIframe({ container, src }, beforeInit) {
+		const pluginIframe = document.createElement("iframe");
+		pluginIframe.src = src;
+		pluginIframe.allowFullscreen = "allowfullscreen";
+
+		if (typeof beforeInit === "function") {
+			beforeInit({ container, iframe: pluginIframe });
+		}
+		container.appendChild(pluginIframe);
+
+		return pluginIframe;
+	}
+
+	const pluginIframe = createPluginIframe({ container, src }, beforeInit);
+
+	const { methods } = await createInitPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow);
 
 	return {
 		methods,
