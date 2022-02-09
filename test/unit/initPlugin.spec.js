@@ -66,7 +66,7 @@ describe("provide plugin tests", function () {
 			errors.length = 0;
 		});
 
-		it("receive domReady messages after setup, send init and resolves with the method object", async function () {
+		it("receive domReady messages after setup, send init and resolves with method object", async function () {
 			const initPlugin = createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
 			createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
@@ -76,7 +76,7 @@ describe("provide plugin tests", function () {
 			});
 		});
 
-		it("can call the methods from providePlugin", async function () {
+		it("can call the methods from initPlugin", async function () {
 			const initPlugin = createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
@@ -89,7 +89,7 @@ describe("provide plugin tests", function () {
 			expect(data.description).toStrictEqual("New description");
 		});
 
-		it("console.warn for wrong hooks", async function () {
+		it("console.warn for unsupported hooks", async function () {
 			createInitPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
@@ -97,7 +97,7 @@ describe("provide plugin tests", function () {
 			expect(warnings).toHaveLength(1);
 		});
 
-		it("can call the set up hook from providePlugin", async function () {
+		it("can call hook from providePlugin", async function () {
 			createInitPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
 			const providePlugin = await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 			await providePlugin.hooks.onResetButtonClicked("data");
