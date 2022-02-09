@@ -81,7 +81,7 @@ export default class PostMessageSocket {
 		if (!message) return; // TODO: We have to renspond with an error or it will timeout
 
 		const listener = this.#listeners[message.type];
-		if (!listener) return; // TODO: We have to renspond with an error or it will timeout
+		if (!listener) return;
 
 		const respond = ({ error, payload }) => {
 			const response = { msgId: message.msgId };
