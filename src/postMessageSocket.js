@@ -40,7 +40,7 @@ export default class PostMessageSocket {
 	}
 
 	#waitForResponse(msgId) {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolveWaitForResponse, rejectWaitForResponse) => {
 			const waitForResponse = (event) => {
 				if (event.source !== this.#targetWindow) return;
 
@@ -56,14 +56,12 @@ export default class PostMessageSocket {
 					this.#appliedEventListeners.splice(index, 1);
 
 					if (response.error) {
-						reject(new Error(response.error));
+						rejectWaitForResponse(new Error(response.error));
 					} else {
-						resolve(response.payload);
+						resolveWaitForResponse(response.payload);
 					}
 				} catch (error) {
-					this.#currentWindow.removeEventListener("message", listener.handler, listener.useCapture);
-					this.#appliedEventListeners.splice(index, 1);
-					reject(new Error(error));
+					return;
 				}
 			};
 			const handler = waitForResponse.bind(this);
@@ -74,7 +72,12 @@ export default class PostMessageSocket {
 
 	async #onMessage(event) {
 		if (!!event.source && event.source !== this.#targetWindow) return;
-		const message = this.#tryParse(event);
+		let message;
+		try {
+			message = this.#tryParse(event);
+		} catch (error) {
+			return;
+		}
 		if (!message) return; // TODO: We have to renspond with an error or it will timeout
 
 		const listener = this.#listeners[message.type];
