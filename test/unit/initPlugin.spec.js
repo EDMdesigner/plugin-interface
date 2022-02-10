@@ -3,7 +3,7 @@ import createProvidePlugin from "../../src/providePlugin";
 import { addFixEvents, removeFixEvents } from "./testUtils/fixEvents";
 import { sideEffectsMapper, createEventListenerSpy, resetJSDOM } from "./testUtils/jsdomReset";
 
-describe("provide plugin tests", function () {
+describe("initPlugin tests", function () {
 	const sideEffects = sideEffectsMapper(window, document);
 	beforeAll(() => {
 		createEventListenerSpy(sideEffects);

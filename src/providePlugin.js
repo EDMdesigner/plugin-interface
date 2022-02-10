@@ -13,7 +13,7 @@ export default function createProvidePlugin({ hooks = [], methods = {}, validato
 	});
 
 	function sendDomReady() {
-		messageSocket.sendMessage("domReady", Object.keys(methods));
+		messageSocket.sendMessage("domReady", {});
 	}
 
 	if (messageSocket.getDocument().readyState === "loading") {

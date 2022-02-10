@@ -44,8 +44,6 @@ describe("set up postMessageSocket environments", () => {
 		afterEach(async function () {
 			await windowSocket.terminate();
 			await iframeSocket.terminate();
-			await new Promise(resolve => setTimeout(resolve, 0));
-			await new Promise(resolve => setTimeout(resolve, 0));
 			windowSocket = null;
 			iframeSocket = null;
 			messages.length = 0;
@@ -119,7 +117,7 @@ describe("set up postMessageSocket environments", () => {
 			}).not.toThrow();
 			const response = await windowSocket.sendRequest("hook", "hello world");
 
-			expect(response).toEqual({ run: true });
+			expect(response).toStrictEqual({ run: true });
 		});
 
 		it("with a NOT matching type the callback is not fired", async function () {
@@ -153,7 +151,7 @@ describe("set up postMessageSocket environments", () => {
 			addFixEvents(pluginIframe.contentWindow, window);
 		});
 
-		it("return error from hooks", async function () {
+		it("return error from listener", async function () {
 			const e = new Error("error happend");
 			windowSocket.addListener("error", () => {
 				throw e;
@@ -162,7 +160,7 @@ describe("set up postMessageSocket environments", () => {
 			await expect(iframeSocket.sendRequest("error", "hello world")).rejects.toStrictEqual(e);
 		});
 
-		it("return text error from hooks, but resolves with it", async function () {
+		it("return text error from listener, but resolves with it", async function () {
 			const e = { error: "error happend" };
 			windowSocket.addListener("hook", () => {
 				return e;

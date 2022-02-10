@@ -120,7 +120,7 @@ describe("provide plugin tests", function () {
 			expect(!!plugin.settings.test).toBe(true);
 		});
 
-		it("send an error message if some hooks are not set", async function () {
+		it("throw an exception when the init validation fails", async function () {
 			const providedHooks = hooks;
 			const requiredHooks = [];
 

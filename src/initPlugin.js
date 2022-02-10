@@ -1,6 +1,6 @@
 import PostMessageSocket from "./postMessageSocket.js";
 
-export function createInitPlugin({ data, settings, hooks }, { container, src, beforeInit }) {
+export function createInitPlugin({ data, settings, hooks }, { container, src, beforeInit, timeout }) {
 	const pluginIframe = document.createElement("iframe");
 	pluginIframe.src = src;
 	pluginIframe.allowFullscreen = "allowfullscreen";
