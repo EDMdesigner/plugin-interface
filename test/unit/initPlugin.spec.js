@@ -77,12 +77,12 @@ describe("initPlugin tests", function () {
 		});
 
 		it("can call the methods from initPlugin", async function () {
-			const initPluginInterface = initPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+			const initPluginInterfacePromise = initPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
-			await initPluginInterface.then((obj) => {
-				obj.methods.updateData({ title: "New title", description: "New description" });
-			});
+			const initPluginInterface = await initPluginInterfacePromise;
+
+			initPluginInterface.methods.updateData({ title: "New title", description: "New description" });
 
 			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(data.title).toStrictEqual("New title");
@@ -92,7 +92,6 @@ describe("initPlugin tests", function () {
 		it("console.warn for unsupported hooks", async function () {
 			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
-
 			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(warnings).toHaveLength(1);
 		});
@@ -101,7 +100,6 @@ describe("initPlugin tests", function () {
 			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
 			const providePlugin = await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 			await providePlugin.hooks.onResetButtonClicked("data");
-
 			expect(messages).toHaveLength(1);
 		});
 	});
