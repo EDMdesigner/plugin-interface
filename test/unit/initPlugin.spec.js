@@ -1,4 +1,4 @@
-import createInitPlugin from "../../src/initPlugin";
+import initPlugin from "../../src/initPlugin";
 import createProvidePlugin from "../../src/providePlugin";
 import { addFixEvents, removeFixEvents } from "./testUtils/fixEvents";
 import { sideEffectsMapper, createEventListenerSpy, resetJSDOM } from "./testUtils/jsdomReset";
@@ -67,20 +67,20 @@ describe("provide plugin tests", function () {
 		});
 
 		it("receive domReady messages after setup, send init and resolves with method object", async function () {
-			const initPlugin = createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+			const pluginInterface = initPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
 			createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
-			await initPlugin.then((obj) => {
+			await pluginInterface.then((obj) => {
 				expect(!!obj.methods.updateData).toBe(true);
 				expect(!!obj.methods.updateSettings).toBe(true);
 			});
 		});
 
 		it("can call the methods from initPlugin", async function () {
-			const initPlugin = createInitPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+			const initPluginInterface = initPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
-			await initPlugin.then((obj) => {
+			await initPluginInterface.then((obj) => {
 				obj.methods.updateData({ title: "New title", description: "New description" });
 			});
 
@@ -90,7 +90,7 @@ describe("provide plugin tests", function () {
 		});
 
 		it("console.warn for unsupported hooks", async function () {
-			createInitPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
+			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
 			await new Promise(resolve => setTimeout(resolve, 0));
@@ -98,7 +98,7 @@ describe("provide plugin tests", function () {
 		});
 
 		it("can call hook from providePlugin", async function () {
-			createInitPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
+			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
 			const providePlugin = await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 			await providePlugin.hooks.onResetButtonClicked("data");
 
