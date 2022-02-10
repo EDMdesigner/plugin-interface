@@ -1,11 +1,11 @@
 // vite.config.js
 const path = require("path");
+const { defineConfig } = require("vite");
 
-export default {
+module.exports = defineConfig({
 	// config options
-	root: "src",
 	build: {
-		outDir: "../dist",
+		outDir: "./dist",
 		target: "es2015",
 		lib: {
 			entry: path.resolve(__dirname, "./src/main.js"),
@@ -13,4 +13,4 @@ export default {
 			fileName: format => `chamaileon-plugin-interface.${format}.js`,
 		},
 	},
-};
+});
