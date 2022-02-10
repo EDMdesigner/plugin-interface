@@ -37,8 +37,6 @@ export default function initPlugin({ data, settings, hooks }, currentWindow, tar
 			});
 
 			resolve({
-				// _container: container,
-				// _iframe: pluginIframe,
 				methods,
 			});
 		}
