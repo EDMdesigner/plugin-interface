@@ -10,7 +10,7 @@ module.exports = defineConfig({
 		lib: {
 			entry: path.resolve(__dirname, "./src/main.js"),
 			name: "Chamaileon Plugin Interface",
-			fileName: format => `chamaileon-plugin-interface.${format}.js`,
+			fileName: format => `main.${format}.js`,
 		},
 	},
 });
