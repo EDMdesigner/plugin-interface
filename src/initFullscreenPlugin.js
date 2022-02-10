@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { createIframeAndInitPlugin } from "./initPlugin.js";
 
-export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit, timeout }) {
+export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit = null, timeout }) {
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
@@ -9,6 +9,21 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	container.style.left = "0";
 	container.style.width = "100vw";
 	container.style.height = "100vh";
+	// switch (settings.showAnimation) {
+	// 	case "slideFromRight":
+	// 		container.style.transition = "margin-left 0s";
+	// 		container.style.marginTop = "0";
+	// 		container.style.marginLeft = "100vw";
+	// 		setTimeout(()=>{
+	// 			container.style.transition = "all 0.5s";
+	// 			container.style.marginLeft = "0";
+	// 		},0);
+	// 		// window.requestAnimationFrame(() => {
+	// 		// });
+	// 		break;
+	// 	default:
+	// 		break;
+	// }
 	container.style.marginTop = "100vw";
 	container.style.transition = "margin-top 0.5s";
 
@@ -16,6 +31,9 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 
 	let splashScreen;
 	function showSplashScreen() {
+		if (!settings.splashScreenUrl) {
+			return;
+		}
 		splashScreen = document.createElement("iframe");
 		splashScreen.src = settings.splashScreenUrl;
 
@@ -44,7 +62,22 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 
 	let shown = false;
 	function show() {
-		container.style.marginTop = "0";
+		switch (settings.showAnimation) {
+			case "slideFromRight":
+				container.style.transition = "margin-left 0s";
+				container.style.marginTop = "0";
+				container.style.marginLeft = "100vw";
+				setTimeout(()=>{
+					container.style.transition = "all 0.5s";
+					container.style.marginLeft = "0";
+				},0);
+				// window.requestAnimationFrame(() => {
+				// });
+				break;
+			default:
+				break;
+		}
+		// container.style.marginTop = "0";
 		shown = true;
 	}
 

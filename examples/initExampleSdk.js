@@ -8,9 +8,10 @@ export default function initExampleSdk({ settings: { splashScreenUrl } = {} }) {
 		return initInlinePlugin({ container, src, data, settings, hooks }, { beforeInit, timeout });
 	}
 
+	// eslint-disable-next-line no-empty-pattern
 	function initContentEditorPlugin({ data, settings, hooks }) {
 		const src = "./plugins/content-editor.html";
-		return initFullscreenPlugin({ id: "content-editor", src, data, settings: { ...settings, splashScreenUrl }, hooks });
+		return initFullscreenPlugin({ id: "content-editor", src, data, settings: { ...settings, splashScreenUrl }, hooks }, {});
 	}
 
 	return {
