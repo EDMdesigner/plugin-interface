@@ -2,6 +2,7 @@
 import { createIframeAndInitPlugin } from "./initPlugin.js";
 
 export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit = null, timeout }) {
+	settings.animationTime = typeof settings.animationTime === "number" ? settings.animationTime : 500;
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
@@ -10,7 +11,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	container.style.width = "100%";
 	container.style.height = "100%";
 	setInitialPosition(settings.showAnimation);
-	container.style.transition = "all 0.5s";
+	container.style.transition = `all ${settings.animationTime / 1000}s`;
 
 	document.body.appendChild(container);
 
@@ -53,24 +54,24 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 			case "slideFromLeft":
 			case "slideFromRight":
 				container.style.opacity = "1";
-				container.style.transition = "all 0.5s";
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
 				container.style.left = "0";
 				container.style.top = "0";
 				break;
 			case "fade":
 				window.requestAnimationFrame(() => {
-					container.style.transition = "all 0s";
+					container.style.transition = "all 0ss";
 					container.style.left = "0";
 
 					window.requestAnimationFrame(() => {
-						container.style.transition = "all 0.5s";
+						container.style.transition = `all ${settings.animationTime / 1000}s`;
 						container.style.opacity = "1";
 					});
 				});
 
 				break;
 			case "scale":
-				container.style.transition = "all 0.5s";
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
 				container.style.opacity = "1";
 				container.style.left = "0";
 				container.style.top = "0";
@@ -86,7 +87,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 
 	function setInitialPosition(animation) {
 		container.style.opacity = "0";
-		container.style.transition = "all 0.5s";
+		container.style.transition = `all ${settings.animationTime / 1000}s`;
 		switch (animation) {
 			case "slideFromTop":
 				container.style.top = "-100vh";
@@ -102,20 +103,20 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 				break;
 			case "fade":
 				container.style.opacity = "0";
-				container.style.transition = "all 0.5s";
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
 				setTimeout(() => {
-					container.style.transition = "all 0s";
+					container.style.transition = "all 0ss";
 					container.style.left = "100vw";
 
 					window.requestAnimationFrame(() => {
-						container.style.transition = "all 0.5s";
+						container.style.transition = `all ${settings.animationTime / 1000}s`;
 					});
 				}, 500);
 
 				break;
 			case "scale":
 				container.style.overflow = "hidden";
-				container.style.transition = "all 0.5s";
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
 				container.style.left = "50vw";
 				container.style.top = "50vh";
 				container.style.height = "0";
