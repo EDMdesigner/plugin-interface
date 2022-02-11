@@ -1,6 +1,6 @@
 {
-	"name": "plugin-interface",
-	"version": "@chamaileon-sdk/0.0.0",
+	"name": "@chamaileon-sdk/plugin-interface",
+	"version": "0.0.0",
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",
