@@ -59,19 +59,17 @@
                 const animationTypes = ["slideFromLeft", "slideFromTop", "slideFromBottom", "slideFromRight", "fade", "scale"]
 
                 animationTypes.forEach((type)=>{
-                    (()=>{
-                        let btn = document.createElement("button");
-                        btn.innerHTML = type;
-                        btn.onclick = async () => {
-                            contentEditorPlugin.showSplashScreen();
-                            await contentEditorPlugin.methods.updateData(data);
-                            contentEditorPlugin.show(type);
-                            animationType = type;
-                            await new Promise(resolve => setTimeout(resolve, 400)); // simulate latency
-                            contentEditorPlugin.hideSplashScreen();
-                        }
-                        document.getElementById("editButtons").appendChild(btn);
-                    })()
+                    let btn = document.createElement("button");
+                    btn.innerHTML = type;
+                    btn.onclick = async () => {
+                        contentEditorPlugin.showSplashScreen();
+                        await contentEditorPlugin.methods.updateData(data);
+                        contentEditorPlugin.show(type);
+                        animationType = type;
+                        await new Promise(resolve => setTimeout(resolve, 400)); // simulate latency
+                        contentEditorPlugin.hideSplashScreen();
+                    }
+                    document.getElementById("editButtons").appendChild(btn);
                 });
             }());
         </script>
