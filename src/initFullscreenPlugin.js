@@ -1,17 +1,17 @@
 /* eslint-disable no-unused-vars */
-import { createIframeAndInitPlugin } from "./initPlugin.js";
+import { createInitPlugin } from "./initPlugin.js";
 
 export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit = null, timeout }) {
-	settings.animationTime = typeof settings.animationTime === "number" ? settings.animationTime : 500;
+	const defaultAnimationTime = 500;
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
-	container.style.top = "0";
+	// Hide to the top
+	container.style.top = "-101vh";
 	container.style.left = "0";
 	container.style.width = "100%";
 	container.style.height = "100%";
-	setInitialPosition(settings.showAnimation);
-	container.style.transition = `all ${settings.animationTime / 1000}s`;
+	container.style.transition = `all ${defaultAnimationTime / 1000}s`;
 
 	document.body.appendChild(container);
 
@@ -47,94 +47,97 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	}
 
 	let shown = false;
-	function show() {
-		switch (settings.showAnimation) {
+	function show(animationType, time) {
+		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
+		switch (animationType) {
 			case "slideFromTop":
+				startShowAnimation({ top: "-100vh" });
+				break;
 			case "slideFromBottom":
+				startShowAnimation({ top: "100vh" });
+				break;
 			case "slideFromLeft":
+				startShowAnimation({ left: "-100vw" });
+				break;
 			case "slideFromRight":
-				container.style.opacity = "1";
-				container.style.transition = `all ${settings.animationTime / 1000}s`;
-				container.style.left = "0";
-				container.style.top = "0";
+				startShowAnimation({ left: "100vw" });
 				break;
 			case "fade":
-				window.requestAnimationFrame(() => {
-					container.style.transition = "all 0ss";
-					container.style.left = "0";
-
-					window.requestAnimationFrame(() => {
-						container.style.transition = `all ${settings.animationTime / 1000}s`;
-						container.style.opacity = "1";
-					});
-				});
-
+				startShowAnimation({});
 				break;
 			case "scale":
-				container.style.transition = `all ${settings.animationTime / 1000}s`;
-				container.style.opacity = "1";
-				container.style.left = "0";
-				container.style.top = "0";
-				container.style.height = "100%";
-				container.style.width = "100%";
+				startShowAnimation({ left: "50vw", top: "50vh", height: "0", width: "0" });
 				break;
 			default:
-				container.style.top = "0";
+				startShowAnimation({ left: "-100vw" });
 				break;
+		}
+		function startShowAnimation({ top = "0", left = "0", opacity = "0", height = "100%", width = "100%", transition }) {
+			window.requestAnimationFrame(() => {
+				container.style.overflow = "hidden";
+				container.style.transition = "all 0s";
+				container.style.opacity = opacity;
+				container.style.left = left;
+				container.style.top = top;
+				container.style.height = height;
+				container.style.width = width;
+				window.requestAnimationFrame(() => {
+					container.style.transition = `all ${animationTime / 1000}s`;
+					container.style.opacity = "1";
+					container.style.left = "0";
+					container.style.top = "0";
+					container.style.height = "100%";
+					container.style.width = "100%";
+				});
+			});
 		}
 		shown = true;
 	}
 
-	function setInitialPosition(animation) {
-		container.style.opacity = "0";
-		container.style.transition = `all ${settings.animationTime / 1000}s`;
-		switch (animation) {
-			case "slideFromTop":
-				container.style.top = "-100vh";
-				break;
-			case "slideFromBottom":
-				container.style.top = "100vh";
-				break;
-			case "slideFromLeft":
-				container.style.left = "-100vw";
-				break;
-			case "slideFromRight":
-				container.style.left = "100vw";
-				break;
-			case "fade":
-				container.style.opacity = "0";
-				container.style.transition = `all ${settings.animationTime / 1000}s`;
-				setTimeout(() => {
-					container.style.transition = "all 0ss";
-					container.style.left = "100vw";
-
-					window.requestAnimationFrame(() => {
-						container.style.transition = `all ${settings.animationTime / 1000}s`;
-					});
-				}, 500);
-
-				break;
-			case "scale":
-				container.style.overflow = "hidden";
-				container.style.transition = `all ${settings.animationTime / 1000}s`;
-				container.style.left = "50vw";
-				container.style.top = "50vh";
-				container.style.height = "0";
-				container.style.width = "0";
-				container.style.opacity = "0";
-				break;
-			default:
-				container.style.top = "100vh";
-				break;
-		}
-	}
-
-	function hide() {
+	function hide(type, time) {
 		if (!shown) {
 			throw new Error("The plugin is already hidden!");
 		}
 
-		setInitialPosition(settings.showAnimation);
+		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
+		switch (type) {
+			case "slideFromTop":
+				startHideAnimation({ top: "-100vh" });
+				break;
+			case "slideFromBottom":
+				startHideAnimation({ top: "100vh" });
+				break;
+			case "slideFromLeft":
+				startHideAnimation({ left: "-100vw" });
+				break;
+			case "slideFromRight":
+				startHideAnimation({ left: "100vw" });
+				break;
+			case "fade":
+				startHideAnimation({ });
+				setTimeout(() => {
+					container.style.transition = "all 0s";
+					container.style.left = "100vw";
+				}, animationTime);
+				break;
+			case "scale":
+				startHideAnimation({ left: "50vw", top: "50vh", width: "0", height: "0" });
+				break;
+			default:
+				startHideAnimation({ left: "-100vw" });
+				break;
+		}
+		function startHideAnimation({ top = "0", left = "0", opacity = "0", height = "100%", width = "100%", transition }) {
+			window.requestAnimationFrame(() => {
+				container.style.overflow = "hidden";
+				container.style.transition = `all ${animationTime / 1000}s`;
+				container.style.opacity = opacity;
+				container.style.left = left;
+				container.style.top = top;
+				container.style.height = height;
+				container.style.width = width;
+			});
+		}
 
 		return new Promise((resolve, reject) => {
 			if (!container) {
@@ -161,7 +164,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		};
 	}
 
-	const { methods } = await createIframeAndInitPlugin({ data, settings, hooks }, { container, src }, beforeInit);
+	const { methods } = await createInitPlugin({ data, settings, hooks }, { container, src }, beforeInit);
 
 	return {
 		methods,
