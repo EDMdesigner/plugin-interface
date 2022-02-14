@@ -124,7 +124,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 				startHideAnimation({ left: "50vw", top: "50vh", width: "0", height: "0" });
 				break;
 			default:
-				container.style.top = "100vh";
+				startHideAnimation({ left: "-100vw" });
 				break;
 		}
 		function startHideAnimation({ top = "0", left = "0", opacity = "0", height = "100%", width = "100%", transition }) {
