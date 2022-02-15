@@ -26,6 +26,7 @@ const config = {
 	coverageReporters: [
 		"text",
 		"text-summary",
+		"html",
 	],
 	testPathIgnorePatterns: [
 		"/node_modules/",

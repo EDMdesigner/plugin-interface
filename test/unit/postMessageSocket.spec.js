@@ -1,28 +1,6 @@
 import PostMessageSocket from "../../src/postMessageSocket";
-
-// workaround for https://github.com/jsdom/jsdom/issues/2745
-// if no origin exists, replace it with the right targetWindow
-function fixEvents(currentWindow, targetWindow, event) {
-	if (!event.origin || event.origin === "" || event.origin === null) {
-		event.stopImmediatePropagation();
-		const eventWithOrigin = new MessageEvent("message", {
-			data: event.data,
-			origin: targetWindow,
-			source: targetWindow,
-		});
-		currentWindow.dispatchEvent(eventWithOrigin);
-	}
-}
-
-let fixEventsBinded;
-function addFixEvents(currentWindow, targetWindow) {
-	fixEventsBinded = fixEvents.bind(null, currentWindow, targetWindow);
-	currentWindow.addEventListener("message", fixEventsBinded);
-}
-
-function removeFixEvents(windowObject) {
-	windowObject.removeEventListener("message", fixEventsBinded);
-}
+import { addFixEvents, removeFixEvents } from "./testUtils/fixEvents";
+import { sideEffectsMapper, createEventListenerSpy, resetJSDOM } from "./testUtils/jsdomReset";
 
 describe("set up postMessageSocket environments", () => {
 	let pluginIframe;
@@ -40,81 +18,14 @@ describe("set up postMessageSocket environments", () => {
 	const messageOne = "This is the first message";
 	const messageTwo = "This is the second message";
 
-	const sideEffects = {
-		document: {
-			addEventListener: {
-				fn: document.addEventListener,
-				refs: [],
-			},
-			keys: Object.keys(document),
-		},
-		window: {
-			addEventListener: {
-				fn: window.addEventListener,
-				refs: [],
-			},
-			keys: Object.keys(window),
-		},
-	};
+	const sideEffects = sideEffectsMapper(window, document);
 
-	// Lifecycle Hooks
-	// -----------------------------------------------------------------------------
 	beforeAll(() => {
-		// Spy addEventListener
-		["document", "window"].forEach((obj) => {
-			const fn = sideEffects[obj].addEventListener.fn;
-			const refs = sideEffects[obj].addEventListener.refs;
-
-			function addEventListenerSpy(type, listener, options) {
-				// Store listener reference so it can be removed during reset
-				refs.push({ type, listener, options });
-				// Call original window.addEventListener
-				fn(type, listener, options);
-			}
-
-			// Add to default key array to prevent removal during reset
-			sideEffects[obj].keys.push("addEventListener");
-
-			// Replace addEventListener with mock
-			global[obj].addEventListener = addEventListenerSpy;
-		});
+		createEventListenerSpy(sideEffects);
 	});
 
-	// Reset JSDOM. This attempts to remove side effects from tests, however it does
-	// not reset all changes made to globals like the window and document
-	// objects. Tests requiring a full JSDOM reset should be stored in separate
-	// files, which is only way to do a complete JSDOM reset with Jest.
 	beforeEach(() => {
-		const rootElm = document.documentElement;
-
-		// Remove attributes on root element
-		[ ...rootElm.attributes ].forEach(attr => rootElm.removeAttribute(attr.name));
-
-		// Remove elements (faster than setting innerHTML)
-		while (rootElm.firstChild) {
-			rootElm.removeChild(rootElm.firstChild);
-		}
-
-		// Remove global listeners and keys
-		["document", "window"].forEach((obj) => {
-			const refs = sideEffects[obj].addEventListener.refs;
-
-			// Listeners
-			while (refs.length) {
-				const { type, listener, options } = refs.pop();
-				global[obj].removeEventListener(type, listener, options);
-			}
-
-			// Keys
-			Object.keys(global[obj])
-				.filter(key => !sideEffects[obj].keys.includes(key))
-				.forEach((key) => {
-					delete global[obj][key];
-				});
-		});
-
-		// Restore base elements
-		rootElm.innerHTML = "<head></head><body></body>";
+		resetJSDOM(document, sideEffects);
 	});
 
 	describe("postMessageSocket tests", function () {
@@ -133,12 +44,8 @@ describe("set up postMessageSocket environments", () => {
 		afterEach(async function () {
 			await windowSocket.terminate();
 			await iframeSocket.terminate();
-			await new Promise(resolve => setTimeout(resolve, 100));
-			await new Promise(resolve => setTimeout(resolve, 100));
 			windowSocket = null;
 			iframeSocket = null;
-			removeFixEvents(window);
-			removeFixEvents(pluginIframe.contentWindow);
 			messages.length = 0;
 		});
 
@@ -156,7 +63,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne);
 			iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
 			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(messages).toHaveLength(2);
 			expect(messages[0]).toBe(messageOne);
@@ -198,6 +105,21 @@ describe("set up postMessageSocket environments", () => {
 			expect(answer2).toBe("hello world" + " from this side.");
 		});
 
+		it("can send request and sends error if couldnt parse the response", async function () {
+			iframeSocket.addListener("hook", async () => {
+				window.postMessage("bad data", "*");
+				await new Promise(resolve => setTimeout(resolve, 0));
+				return { run: true };
+			});
+
+			expect(async () => {
+				await windowSocket.sendRequest("hook", "hello world");
+			}).not.toThrow();
+			const response = await windowSocket.sendRequest("hook", "hello world");
+
+			expect(response).toStrictEqual({ run: true });
+		});
+
 		it("with a NOT matching type the callback is not fired", async function () {
 			windowSocket.addListener(testWindowSocket, messageCallback);
 			iframeSocket.addListener(testiframeSocketSocket, messageCallback);
@@ -208,7 +130,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.sendRequest("random-type", messageOne);
 			iframeSocket.sendRequest("random-type", messageTwo);
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(messages).toHaveLength(0);
 		});
 
@@ -220,7 +142,7 @@ describe("set up postMessageSocket environments", () => {
 
 			pluginIframe.contentWindow.postMessage(JSON.stringify({ type: testiframeSocketSocket, payload: messageOne, msgId: "testMsg" }), "*");
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(messages).toHaveLength(0);
 
 			removeFixEvents(window);
@@ -229,7 +151,7 @@ describe("set up postMessageSocket environments", () => {
 			addFixEvents(pluginIframe.contentWindow, window);
 		});
 
-		it("return error from hooks", async function () {
+		it("return error from listener", async function () {
 			const e = new Error("error happend");
 			windowSocket.addListener("error", () => {
 				throw e;
@@ -238,7 +160,7 @@ describe("set up postMessageSocket environments", () => {
 			await expect(iframeSocket.sendRequest("error", "hello world")).rejects.toStrictEqual(e);
 		});
 
-		it("return text error from hooks, but resolves with it", async function () {
+		it("return text error from listener, but resolves with it", async function () {
 			const e = { error: "error happend" };
 			windowSocket.addListener("hook", () => {
 				return e;
@@ -259,7 +181,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.terminate();
 			iframeSocket.terminate();
 
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			windowSocket.addListener(testWindowSocketOnce, messageCallback, { once: true });
 			iframeSocket.addListener(testiframeSocketSocketOnce, messageCallback, { once: true });
@@ -267,7 +189,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne);
 			iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
 			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(messages).toHaveLength(0);
 		});

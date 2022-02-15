@@ -14,7 +14,6 @@
                 const initExampleSdk = (await import("./initExampleSdk.js")).default;
                 const sdk = await initExampleSdk({
                     settings: {
-                        splashScreenUrl: "https://chamaileon-sdk.github.io/splashscreen-and-logo-examples/splashScreen.html"
                     }
                 });
 
@@ -35,7 +34,11 @@
 
                 const contentEditorPlugin = await sdk.initContentEditorPlugin({
                     data,
-                    settings: { background: "#abcdef"},
+                    settings: { 
+                        background: "#abcdef",
+                        showAnimation: "scale",
+                        animationTime: 1000,
+                    },
                     hooks: {
                         onResetButtonClicked: async () => {
                             return data;
@@ -48,7 +51,8 @@
                             contentEditorPlugin.hide();
                         }
                     }
-                });
+                },
+                {});
 
                 document.getElementById("editButton").onclick = async () => {
                     contentEditorPlugin.showSplashScreen();

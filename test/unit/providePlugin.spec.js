@@ -1,93 +1,256 @@
 import PostMessageSocket from "../../src/postMessageSocket";
 import providePlugin from "../../src/providePlugin";
+import { addFixEvents, removeFixEvents } from "./testUtils/fixEvents";
+import { sideEffectsMapper, createEventListenerSpy, resetJSDOM } from "./testUtils/jsdomReset";
 
-// workaround for https://github.com/jsdom/jsdom/issues/2745
-// if no origin exists, replace it with the right targetWindow
-function fixEvents(currentWindow, targetWindow, event) {
-	if (!event.origin || event.origin === "" || event.origin === null) {
-		event.stopImmediatePropagation();
-		const eventWithOrigin = new MessageEvent("message", {
-			data: event.data,
-			origin: targetWindow,
-			source: targetWindow,
-		});
-		currentWindow.dispatchEvent(eventWithOrigin);
-	}
-}
-
-let fixEventsBinded;
-function addFixEvents(currentWindow, targetWindow) {
-	fixEventsBinded = fixEvents.bind(null, currentWindow, targetWindow);
-	currentWindow.addEventListener("message", fixEventsBinded);
-}
-
-// function removeFixEvents(windowObject) {
-// 	windowObject.removeEventListener("message", fixEventsBinded);
-// }
-
-describe("providePlugin", () => {
-	let pluginIframe;
-	let body;
-	let windowSocket;
-	let iframeSocket;
-
-	beforeAll(function () {
-		pluginIframe = document.createElement("iframe");
-		pluginIframe.src = "";
-		pluginIframe.allowFullscreen = "allowfullscreen";
-		body = document.querySelector("body");
-		body.appendChild(pluginIframe);
-
-		windowSocket = new PostMessageSocket(window, pluginIframe.contentWindow);
-		addFixEvents(window, pluginIframe.contentWindow);
-
-		iframeSocket = new PostMessageSocket(pluginIframe.contentWindow, window);
-		addFixEvents(pluginIframe.contentWindow, window);
+describe("provide plugin tests", function () {
+	const warnings = [];
+	console.warn = payload => warnings.push(payload);
+	const sideEffects = sideEffectsMapper(window, document);
+	beforeAll(() => {
+		createEventListenerSpy(sideEffects);
+	});
+	beforeEach(() => {
+		resetJSDOM(document, sideEffects);
 	});
 
-	it.todo("throws proper errors on improper data");
-	it.todo("with proper data, sends domready, throws error if not getting init call");
-	it("with proper data, init properly", async () => {
-		const timeout = 5000;
-		const hooks = {
-			testHook: () => {
-				console.log("testhook");
-			},
-		};
-		const data = {
-			title: "testTitle",
-			description: "testDescription",
-		};
-		const settings = {
-			background: "#abcdef",
-		};
+	describe("providePlugin", () => {
+		let pluginIframe;
+		let body;
+		let windowSocket;
+		const messages = [];
+		const errors = [];
 
-		function testMethod(testData) {
-			console.log(testData);
-		}
+		const hooks = ["onResetButtonClicked", "onSaveButtonClicked", "onClose", "error"];
 
-		windowSocket.addListener("domReady", onDomReady, { once: true });
+		beforeEach(function () {
+			pluginIframe = document.createElement("iframe");
+			pluginIframe.src = "";
+			pluginIframe.allowFullscreen = "allowfullscreen";
+			body = document.querySelector("body");
+			body.appendChild(pluginIframe);
 
-		let domReadyResponse;
-		async function onDomReady(payload) {
-			domReadyResponse = payload;
-			await windowSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
-		}
+			windowSocket = new PostMessageSocket(window, pluginIframe.contentWindow);
+			windowSocket.addListener("error", payload => errors.push(payload));
+			addFixEvents(window, pluginIframe.contentWindow);
+			addFixEvents(pluginIframe.contentWindow, window);
+		});
 
-		const iface = await providePlugin({
-			settings,
-			hookNames: [ "testHook" ],
-			methods: {
-				testMethod,
-			},
-		}, iframeSocket);
+		afterEach(async function () {
+			await windowSocket.terminate();
+			removeFixEvents(window);
+			removeFixEvents(pluginIframe.contentWindow);
+			windowSocket = null;
+			messages.length = 0;
+			errors.length = 0;
+			warnings.length = 0;
+		});
 
-		expect(domReadyResponse.config.settings).toEqual({ background: "#abcdef" });
-		expect(domReadyResponse.config.hookNames).toEqual([ "testHook" ]);
-		expect(domReadyResponse.config.methods).toEqual([ "testMethod" ]);
+		it("send domReady postmessage and receive an init message", async function () {
+			windowSocket.addListener("domReady", (payload) => {
+				messages.push(payload);
+				windowSocket.sendMessage("init");
+			}, { once: true });
 
-		expect(iface.data).toEqual({ title: "testTitle", description: "testDescription" });
-		expect(iface.settings).toEqual({ background: "#abcdef" });
-		expect(typeof iface.hooks.testHook).toBe("function");
+			const plugin = await providePlugin({}, pluginIframe.contentWindow, window);
+
+			expect(plugin.data).toBe(null);
+			expect(!!plugin.hooks).toBe(true);
+			expect(plugin.settings).toBe(null);
+			expect(messages).toHaveLength(1);
+		});
+
+		it("send domReady postmessage and receive an init message, after waiting for loading", async function () {
+			windowSocket.addListener("domReady", (payload) => {
+				messages.push(payload);
+				windowSocket.sendMessage("init");
+			}, { once: true });
+
+			Object.defineProperty(pluginIframe.contentWindow.document, "readyState", {
+				get() {
+					return "loading";
+				},
+			});
+
+			setTimeout(() => {
+				pluginIframe.contentWindow.document.dispatchEvent(new Event("DOMContentLoaded", {
+					bubbles: true,
+					cancelable: true,
+				}));
+			}, 500);
+
+			const plugin = await providePlugin({}, pluginIframe.contentWindow, window);
+
+			expect(plugin.data).toBe(null);
+			expect(!!plugin.hooks).toBe(true);
+			expect(plugin.settings).toBe(null);
+			expect(messages).toHaveLength(1);
+		});
+
+		it("no error message if all hooks set in the init message", async function () {
+			const hooksFn = {};
+			hooks.forEach((hook) => {
+				hooksFn[hook] = (data) => {
+					return new Promise((resolve) => {
+						resolve(data);
+					});
+				};
+			});
+			windowSocket.addListener("domReady", () => {
+				windowSocket.sendMessage("init", {
+					data: "Data from init",
+					settings: { test: true },
+					hooks: Object.keys(hooksFn),
+				});
+			}, { once: true });
+
+			const plugin = await providePlugin({
+				data: "This is the data",
+				settings: { isButtonClickable: true },
+				hooks,
+				methods: {
+					test() {
+						return "test";
+					},
+				},
+			}, pluginIframe.contentWindow, window);
+
+			expect(plugin.data).toBe("Data from init");
+			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
+			expect(!!plugin.settings.test).toBe(true);
+		});
+
+		it("throw an exception when the init validation fails", async function () {
+			const providedHooks = hooks;
+			const requiredHooks = [];
+
+			// eslint-disable-next-line no-shadow
+			function validator({ hooks }) {
+				providedHooks.forEach((hook) => {
+					if (!hooks.includes(hook)) {
+						requiredHooks.push(hook);
+					}
+				});
+				if (requiredHooks.length) {
+					throw new Error(`The following hooks are missing: ${requiredHooks}`);
+				}
+			}
+
+			const error = new Error("The following hooks are missing: onResetButtonClicked,onSaveButtonClicked");
+			let methods;
+
+			try {
+				windowSocket.addListener("domReady", () => {
+					methods = windowSocket.sendRequest("init", {
+						data: "Data from init",
+						settings: { test: true },
+						hooks: [ "onClose" ],
+					});
+				}, { once: true });
+
+				// eslint-disable-next-line no-shadow
+
+				await providePlugin({
+					settings: { isButtonClickable: true },
+					hooks,
+					methods: {
+						test() {
+							return "test";
+						},
+					},
+					validator,
+				}, pluginIframe.contentWindow, window);
+			} catch (e) {
+				// eslint-disable-next-line jest/no-conditional-expect
+				expect(e).toStrictEqual(error);
+			}
+			await expect(methods).rejects.toStrictEqual(error);
+		});
+
+		it("send a warning if finds an unknown hook", async function () {
+			windowSocket.addListener("error", function (error) {
+				console.warn(error);
+			});
+
+			windowSocket.addListener("domReady", () => {
+				windowSocket.sendMessage("init", {
+					data: "Data from init",
+					settings: { test: true },
+					hooks: ["some-other-hook", ...hooks],
+				});
+			}, { once: true });
+
+			const plugin = await providePlugin({
+				data: "This is the data",
+				settings: { isButtonClickable: true },
+				hooks,
+				methods: {
+					test() {
+						return "test";
+					},
+				},
+			}, pluginIframe.contentWindow, window);
+
+			expect(plugin.data).toBe("Data from init");
+			expect(!!plugin.settings.test).toBe(true);
+
+			// you have to wait for the request inside providePlugin
+			await new Promise(resolve => setTimeout(resolve, 0));
+
+			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
+			expect(warnings).toHaveLength(1);
+		});
+
+		it("can call the hooks methods", async function () {
+			windowSocket.addListener("domReady", () => {
+				const hooksFn = {};
+				hooks.forEach((hook) => {
+					hooksFn[hook] = (data) => {
+						return new Promise((resolve) => {
+							resolve(data);
+						});
+					};
+				});
+				windowSocket.sendMessage("init", {
+					data: "Data from init",
+					settings: { test: true },
+					hooks: Object.keys(hooksFn),
+				});
+			}, { once: true });
+
+			const plugin = await providePlugin({
+				data: "This is the data",
+				settings: { isButtonClickable: true },
+				hooks,
+				methods: {
+					test() {
+						return "test";
+					},
+				},
+			}, pluginIframe.contentWindow, window);
+
+			windowSocket.addListener("onResetButtonClicked", (payload) => {
+				messages.push(payload);
+				return payload + "answer";
+			});
+			windowSocket.addListener("onSaveButtonClicked", (payload) => {
+				messages.push(payload);
+				return payload + "answer";
+			});
+			windowSocket.addListener("onClose", (payload) => {
+				messages.push(payload);
+				return payload + "answer";
+			});
+
+			await plugin.hooks.onResetButtonClicked("test");
+			await plugin.hooks.onSaveButtonClicked("test");
+			await plugin.hooks.onClose("test");
+
+			expect(messages).toHaveLength(3);
+
+			expect(plugin.data).toBe("Data from init");
+			expect(Object.keys(plugin.hooks)).toStrictEqual(hooks);
+			expect(!!plugin.settings.test).toBe(true);
+		});
 	});
 });

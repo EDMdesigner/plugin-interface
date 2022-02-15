@@ -1,21 +1,25 @@
 /* eslint-disable no-unused-vars */
-import initPlugin from "./initPlugin.js";
+import { createIframeAndInitPlugin } from "./initPlugin.js";
 
-export default async function initFullscreenPlugin({ id, src, data, settings, hooks }) {
+export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit = null, timeout }) {
+	settings.animationTime = typeof settings.animationTime === "number" ? settings.animationTime : 500;
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
 	container.style.top = "0";
 	container.style.left = "0";
-	container.style.width = "100vw";
-	container.style.height = "100vh";
-	container.style.marginTop = "100vw";
-	container.style.transition = "margin-top 0.5s";
+	container.style.width = "100%";
+	container.style.height = "100%";
+	setInitialPosition(settings.showAnimation);
+	container.style.transition = `all ${settings.animationTime / 1000}s`;
 
 	document.body.appendChild(container);
 
 	let splashScreen;
 	function showSplashScreen() {
+		if (!settings.splashScreenUrl) {
+			return;
+		}
 		splashScreen = document.createElement("iframe");
 		splashScreen.src = settings.splashScreenUrl;
 
@@ -44,8 +48,85 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 
 	let shown = false;
 	function show() {
-		container.style.marginTop = "0";
+		switch (settings.showAnimation) {
+			case "slideFromTop":
+			case "slideFromBottom":
+			case "slideFromLeft":
+			case "slideFromRight":
+				container.style.opacity = "1";
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
+				container.style.left = "0";
+				container.style.top = "0";
+				break;
+			case "fade":
+				window.requestAnimationFrame(() => {
+					container.style.transition = "all 0ss";
+					container.style.left = "0";
+
+					window.requestAnimationFrame(() => {
+						container.style.transition = `all ${settings.animationTime / 1000}s`;
+						container.style.opacity = "1";
+					});
+				});
+
+				break;
+			case "scale":
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
+				container.style.opacity = "1";
+				container.style.left = "0";
+				container.style.top = "0";
+				container.style.height = "100%";
+				container.style.width = "100%";
+				break;
+			default:
+				container.style.top = "0";
+				break;
+		}
 		shown = true;
+	}
+
+	function setInitialPosition(animation) {
+		container.style.opacity = "0";
+		container.style.transition = `all ${settings.animationTime / 1000}s`;
+		switch (animation) {
+			case "slideFromTop":
+				container.style.top = "-100vh";
+				break;
+			case "slideFromBottom":
+				container.style.top = "100vh";
+				break;
+			case "slideFromLeft":
+				container.style.left = "-100vw";
+				break;
+			case "slideFromRight":
+				container.style.left = "100vw";
+				break;
+			case "fade":
+				container.style.opacity = "0";
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
+				setTimeout(() => {
+					container.style.transition = "all 0ss";
+					container.style.left = "100vw";
+
+					window.requestAnimationFrame(() => {
+						container.style.transition = `all ${settings.animationTime / 1000}s`;
+					});
+				}, 500);
+
+				break;
+			case "scale":
+				container.style.overflow = "hidden";
+				container.style.transition = `all ${settings.animationTime / 1000}s`;
+				container.style.left = "50vw";
+				container.style.top = "50vh";
+				container.style.height = "0";
+				container.style.width = "0";
+				container.style.opacity = "0";
+				break;
+			default:
+				container.style.top = "100vh";
+				break;
+		}
 	}
 
 	function hide() {
@@ -53,7 +134,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 			throw new Error("The plugin is already hidden!");
 		}
 
-		container.style.marginTop = "100vh";
+		setInitialPosition(settings.showAnimation);
 
 		return new Promise((resolve, reject) => {
 			if (!container) {
@@ -71,18 +152,21 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		container = null;
 	}
 
-	// eslint-disable-next-line no-unused-vars
-	// eslint-disable-next-line no-shadow
-	function beforeInit({ container, iframe }) {
-		iframe.style.width = "100%";
-		iframe.style.height = "100%";
+	let _beforeInit = beforeInit;
+
+	if (!_beforeInit || typeof _beforeInit !== "function") {
+		_beforeInit = function ({ iframe }) {
+			iframe.style.width = "100%";
+			iframe.style.height = "100%";
+		};
 	}
 
-	const plugin = await initPlugin({ container, src, data, settings, hooks }, { beforeInit });
+	const { methods } = await createIframeAndInitPlugin({ data, settings, hooks }, { container, src }, beforeInit);
 
 	return {
-		...plugin,
-
+		methods,
+		_container: container,
+		_src: src,
 		showSplashScreen,
 		hideSplashScreen,
 		show,
