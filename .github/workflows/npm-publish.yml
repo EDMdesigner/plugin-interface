@@ -1,26 +1,25 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://help.github.com/actions/language-and-framework-guides/publishing-nodejs-packages
-
-name: Chamaileon-sdk plugin-interface 
+name: Build and deploy to npm
 
 on:
-  release:
-    types: [created]
+  push:
+    branches:
+      - master
+      - 'environment/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2 
         with:
           node-version: 16
       - run: npm ci
       - run: npm test
-
+      - run: npm semverCheck
+ 
   publish-npm:
     needs: build
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -31,4 +30,4 @@ jobs:
       - run: npm ci
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
