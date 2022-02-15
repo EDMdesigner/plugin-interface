@@ -16,7 +16,8 @@ jobs:
           node-version: 16
       - run: npm ci
       - run: npm test
-      - run: npm semverCheck
+      env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
  
   publish-npm:
     needs: build
