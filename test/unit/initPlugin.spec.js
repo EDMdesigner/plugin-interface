@@ -12,7 +12,7 @@ describe("initPlugin tests", function () {
 		resetJSDOM(document, sideEffects);
 	});
 
-	describe("providePlugin", () => {
+	describe("initPlugin", () => {
 		let pluginIframe;
 		let body;
 		const warnings = [];
