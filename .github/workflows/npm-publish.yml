@@ -16,6 +16,7 @@ jobs:
           node-version: 16
           always-auth: true
           registry-url: https://npm.pkg.github.com/ 
+          scope: '@EDMdesigner'
       - run: npm ci
         env:
             NODE_AUTH_TOKEN: ${{secrets.NPM_GH_PACKAGES}}
