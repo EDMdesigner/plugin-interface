@@ -164,9 +164,9 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	const { methods } = await createIframeAndInitPlugin({ data, settings, hooks }, { container, src }, beforeInit);
 
 	return {
-		methods,
 		_container: container,
 		_src: src,
+		methods,
 		showSplashScreen,
 		hideSplashScreen,
 		show,
