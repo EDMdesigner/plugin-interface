@@ -14,11 +14,10 @@
 	},
 	"scripts": {
 		"dev": "vite",
-		"lint": "npm run lint",
 		"build": "vite build",
 		"preview": "vite preview",
 		"semverCheck": "node scripts/semverCheck.js",
-		"test": "jest && npm run lint",
+		"test": "jest",
 		"test:watch": "jest --watch"
 	},
 	"devDependencies": {
