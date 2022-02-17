@@ -1,8 +1,9 @@
 {
 	"name": "@chamaileon-sdk/plugin-interface",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"main": "./dist/main.umd.js",
 	"module": "./dist/main.es.js",
+	"files": ["dist", "src", "test"],
 	"exports": {
 		".": {
 			"import": "./dist/main.es.js",
