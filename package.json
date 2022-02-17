@@ -10,6 +10,9 @@
 			"require": "./dist/main.umd.js"
 		}
 	},
+	"publishConfig": {
+		"registry":"https://registry.npmjs.org/"
+	},
 	"scripts": {
 		"dev": "vite",
 		"build": "vite build",

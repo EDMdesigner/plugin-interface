@@ -24,7 +24,6 @@ jobs:
       - run: npm run build
       - run: npm publish --access public
         env:
-          registry-url: https://registry.npmjs.org/
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
  
   # publish-npm:
