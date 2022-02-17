@@ -1,8 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { createInitPlugin } from "./initPlugin.js";
 
-export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit = null, timeout }) {
-	const defaultAnimationTime = 500;
+export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit = null, timeout } = {}) {
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
@@ -11,7 +10,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	container.style.left = "0";
 	container.style.width = "100%";
 	container.style.height = "100%";
-	container.style.transition = `all ${defaultAnimationTime / 1000}s`;
+	container.style.transition = "all 0.5s";
 
 	document.body.appendChild(container);
 
@@ -47,8 +46,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	}
 
 	let shown = false;
-	function show(animationType, time) {
-		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
+	function show(animationType, animationTime = 500) {
 		switch (animationType) {
 			case "slideFromTop":
 				startShowAnimation({ top: "-100vh" });
@@ -94,12 +92,11 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		shown = true;
 	}
 
-	function hide(type, time) {
+	function hide(type, animationTime = 500) {
 		if (!shown) {
 			throw new Error("The plugin is already hidden!");
 		}
 
-		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
 		switch (type) {
 			case "slideFromTop":
 				startHideAnimation({ top: "-100vh" });
@@ -145,12 +142,12 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 			}
 			setTimeout(() => {
 				resolve();
-			}, 500);
+			}, 500); // TODO ez egyenlo az animationTime-mal?
 		});
 	}
 
-	async function destroy() {
-		await hide();
+	async function destroy(type, time) {
+		await hide(type, time);
 		container.remove();
 		container = null;
 	}
