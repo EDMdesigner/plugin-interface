@@ -20,7 +20,7 @@ jobs:
         env:
           registry-url: 'https://npm.pkg.github.com/'
           NODE_AUTH_TOKEN: ${{secrets.NPM_GH_PACKAGES}}
-      - run: npm test
+      # - run: npm test
       - run: npm run build
       - run: npm publish --access public
         env:
