@@ -1,4 +1,4 @@
-name: Build and deploy to npm
+name: Build and deploy
 
 on:
   push:
@@ -14,16 +14,17 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 16
-          registry-url: 'https://npm.pkg.github.com/'
-          scope: '@EDMdesigner'
+          npm-registry:
+            - registry: 'https://npm.pkg.github.com/'
+              scope: '@EDMdesigner'
+              token: ${{secrets.NPM_GH_PACKAGES}}
+            - registry: https://registry.npmjs.org/
+              scope: '@chamaileon-sdk'
+              token: ${{secrets.NPM_TOKEN}}
       - run: npm ci
-        env:
-            NODE_AUTH_TOKEN: ${{secrets.NPM_GH_PACKAGES}}
       - run: npm test
       - run: npm run build
       - run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
  
   # publish-npm:
   #   needs: build
