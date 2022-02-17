@@ -14,16 +14,16 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 16
-          registry-url: 'https://npm.pkg.github.com/'
-          scope: '@EDMdesigner'
       - run: npm ci
         env:
           registry-url: 'https://npm.pkg.github.com/'
+          scope: '@EDMdesigner'
           NODE_AUTH_TOKEN: ${{secrets.NPM_GH_PACKAGES}}
       # - run: npm test
       - run: npm run build
       - run: npm publish --access public
         env:
+          registry-url: https://registry.npmjs.org/
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
  
   # publish-npm:
