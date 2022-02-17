@@ -15,9 +15,11 @@ jobs:
         with:
           node-version: 16
           registry-url: 'https://npm.pkg.github.com/'
-          scope: '@EDMdesigner'
+          # scope: '@EDMdesigner'
           NODE_AUTH_TOKEN: ${{secrets.NPM_GH_PACKAGES}}
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       # - run: npm test
       - run: npm run build
       - uses: JS-DevTools/npm-publish@v1
