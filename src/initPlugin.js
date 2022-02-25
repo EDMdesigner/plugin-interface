@@ -4,18 +4,19 @@ export function createInitPlugin({ data, settings, hooks }, { container, src, be
 	const pluginIframe = document.createElement("iframe");
 	pluginIframe.src = src;
 	pluginIframe.allowFullscreen = "allowfullscreen";
-	pluginIframe.style.width = "100vw";
-	pluginIframe.style.height = "100vh";
+	pluginIframe.style.width = "100%";
+	pluginIframe.style.height = "100%";
 
 	if (typeof beforeInit === "function") {
 		beforeInit({ container, iframe: pluginIframe });
 	}
+
 	container.appendChild(pluginIframe);
 
-	return initPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow);
+	return initPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow, timeout);
 }
 
-export default function initPlugin({ data, settings, hooks }, currentWindow, targetWindow) {
+export default function initPlugin({ data, settings, hooks }, currentWindow, targetWindow, timeout = 5000) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	messageSocket.addListener("error", payload => console.warn(payload));
@@ -24,8 +25,12 @@ export default function initPlugin({ data, settings, hooks }, currentWindow, tar
 		messageSocket.addListener(hook, payload => hooks[hook](payload));
 	});
 
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		messageSocket.addListener("domReady", onDomReady, { once: true });
+
+		const timeoutError = new Error("Plugin initialization failed");
+		setTimeout(reject(timeoutError), timeout);
+
 		async function onDomReady() {
 			const answer = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
 			const methods = {};
@@ -38,6 +43,7 @@ export default function initPlugin({ data, settings, hooks }, currentWindow, tar
 
 			resolve({
 				methods,
+				terminate: messageSocket.terminate,
 			});
 		}
 	});

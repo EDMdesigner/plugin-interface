@@ -6,6 +6,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
+	container.style.zIndex = "99999999";
 	// Hide to the top
 	container.style.top = "-101vh";
 	container.style.left = "0";
