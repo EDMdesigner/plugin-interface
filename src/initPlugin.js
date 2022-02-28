@@ -28,8 +28,10 @@ export default function initPlugin({ data, settings, hooks }, currentWindow, tar
 	return new Promise((resolve, reject) => {
 		messageSocket.addListener("domReady", onDomReady, { once: true });
 
-		const timeoutError = new Error("Plugin initialization failed");
-		setTimeout(reject(timeoutError), timeout);
+		const timetoutID = setTimeout(() => {
+			messageSocket.terminate();
+			reject(new Error("Plugin initialization failed"));
+		}, timeout);
 
 		async function onDomReady() {
 			const answer = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
@@ -40,6 +42,8 @@ export default function initPlugin({ data, settings, hooks }, currentWindow, tar
 					return await messageSocket.sendRequest(type, payload);
 				};
 			});
+
+			clearTimeout(timetoutID);
 
 			resolve({
 				methods,

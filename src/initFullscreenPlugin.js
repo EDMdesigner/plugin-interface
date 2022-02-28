@@ -102,16 +102,16 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 
 		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
 		switch (type) {
-			case "slideFromTop":
+			case "slideToTop":
 				startHideAnimation({ top: "-100vh" });
 				break;
-			case "slideFromBottom":
+			case "slideToBottom":
 				startHideAnimation({ top: "100vh" });
 				break;
-			case "slideFromLeft":
+			case "slideToLeft":
 				startHideAnimation({ left: "-100vw" });
 				break;
-			case "slideFromRight":
+			case "slideToRight":
 				startHideAnimation({ left: "100vw" });
 				break;
 			case "fade":
@@ -146,7 +146,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 			}
 			setTimeout(() => {
 				resolve();
-			}, 500);
+			}, time);
 		});
 	}
 

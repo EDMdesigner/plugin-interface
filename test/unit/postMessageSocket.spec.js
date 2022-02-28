@@ -105,9 +105,10 @@ describe("set up postMessageSocket environments", () => {
 			expect(answer2).toBe("hello world" + " from this side.");
 		});
 
-		it("can send request and sends error if couldnt parse the response", async function () {
+		it("can send request and sends error if could not parse the response", async function () {
 			iframeSocket.addListener("hook", async () => {
 				window.postMessage("bad data", "*");
+				// we use a promise to wait for the response since postMessage is async
 				await new Promise(resolve => setTimeout(resolve, 0));
 				return { run: true };
 			});
@@ -130,6 +131,7 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.sendRequest("random-type", messageOne);
 			iframeSocket.sendRequest("random-type", messageTwo);
 
+			// we use a promise to wait for the response since postMessage is async
 			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(messages).toHaveLength(0);
 		});
@@ -142,6 +144,7 @@ describe("set up postMessageSocket environments", () => {
 
 			pluginIframe.contentWindow.postMessage(JSON.stringify({ type: testiframeSocketSocket, payload: messageOne, msgId: "testMsg" }), "*");
 
+			// we use a promise to wait for the response since postMessage is async
 			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(messages).toHaveLength(0);
 
@@ -181,14 +184,13 @@ describe("set up postMessageSocket environments", () => {
 			windowSocket.terminate();
 			iframeSocket.terminate();
 
-			await new Promise(resolve => setTimeout(resolve, 0));
-
 			windowSocket.addListener(testWindowSocketOnce, messageCallback, { once: true });
 			iframeSocket.addListener(testiframeSocketSocketOnce, messageCallback, { once: true });
 
 			windowSocket.sendMessage(testiframeSocketSocketOnce, messageOne);
 			iframeSocket.sendMessage(testWindowSocketOnce, messageTwo);
-			// we have to wait after all postMessage since they are implemented as setTimeout in jsdom
+
+			// we use a promise to wait for the response since postMessage is async
 			await new Promise(resolve => setTimeout(resolve, 0));
 
 			expect(messages).toHaveLength(0);
