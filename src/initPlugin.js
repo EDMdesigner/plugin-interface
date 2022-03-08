@@ -13,10 +13,10 @@ export function createInitPlugin({ data, settings, hooks }, { container, src, be
 
 	container.appendChild(pluginIframe);
 
-	return initPlugin({ data, settings, hooks }, window, pluginIframe.contentWindow, timeout);
+	return initPlugin({ data, settings, hooks }, { currentWindow: window, targetWindow: pluginIframe.contentWindow, timeout, container });
 }
 
-export default function initPlugin({ data, settings, hooks }, currentWindow, targetWindow, timeout = 5000) {
+export default function initPlugin({ data, settings, hooks }, { currentWindow, targetWindow, timeout = 5000, container }) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	messageSocket.addListener("error", payload => console.warn(payload));
@@ -30,7 +30,10 @@ export default function initPlugin({ data, settings, hooks }, currentWindow, tar
 
 		const timetoutID = setTimeout(() => {
 			messageSocket.terminate();
-			reject(new Error("Plugin initialization failed"));
+			if (container?.remove && typeof container.remove === "function") {
+				container.remove();
+			}
+			reject(new Error("Plugin initialization failed with timeout! You can try to increase the timeout value in the plugin settings. Default value is 5000ms."));
 		}, timeout);
 
 		async function onDomReady() {

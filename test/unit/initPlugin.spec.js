@@ -67,7 +67,7 @@ describe("initPlugin tests", function () {
 		});
 
 		it("receive domReady messages after setup, send init and resolves with method object", async function () {
-			const pluginInterface = initPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+			const pluginInterface = initPlugin({ data, settings, hooks: hookFunction }, { currentWindow: window, targetWindow: pluginIframe.contentWindow });
 			createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
 			await pluginInterface.then((obj) => {
@@ -77,7 +77,7 @@ describe("initPlugin tests", function () {
 		});
 
 		it("can call the methods from initPlugin", async function () {
-			const initPluginInterfacePromise = initPlugin({ data, settings, hooks: hookFunction }, window, pluginIframe.contentWindow);
+			const initPluginInterfacePromise = initPlugin({ data, settings, hooks: hookFunction }, { currentWindow: window, targetWindow: pluginIframe.contentWindow });
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 
 			const initPluginInterface = await initPluginInterfacePromise;
@@ -90,14 +90,14 @@ describe("initPlugin tests", function () {
 		});
 
 		it("console.warn for unsupported hooks", async function () {
-			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
+			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, { currentWindow: window, targetWindow: pluginIframe.contentWindow });
 			await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 			await new Promise(resolve => setTimeout(resolve, 0));
 			expect(warnings).toHaveLength(1);
 		});
 
 		it("can call hook from providePlugin", async function () {
-			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, window, pluginIframe.contentWindow);
+			initPlugin({ data, settings, hooks: { "extra-hook": null, ...hookFunction } }, { currentWindow: window, targetWindow: pluginIframe.contentWindow });
 			const providePlugin = await createProvidePlugin({ hooks, methods }, pluginIframe.contentWindow, window);
 			await providePlugin.hooks.onResetButtonClicked("data");
 			expect(messages).toHaveLength(1);
