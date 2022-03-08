@@ -4,17 +4,21 @@ import { createInitPlugin } from "./initPlugin.js";
 let currentZIndex = 0;
 
 export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { parentElem, beforeInit = null, timeout }) {
-	const defaultAnimationTime = 500;
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
+	container.style.top = "0";
+	container.style.left = "0";
 	container.style.zIndex = 0;
 	// Hide to the top
-	container.style.top = "-101vh";
-	container.style.left = "0";
+	let defaultAnimationTime = 1500;
+	let hiddenPosition = "translate3d(-100vw, 0px, 0px) scale(1)";
+	let hiddenOpacity = 0;
+	container.style.transform = hiddenPosition;
+	container.style.opacity = hiddenOpacity;
 	container.style.width = "100%";
 	container.style.height = "100%";
-	container.style.transition = `all ${defaultAnimationTime / 1000}s`;
+	container.style.transition = `transform ${defaultAnimationTime / 1000}s easy-in-out`;
 
 	const parent = parentElem || document.body;
 	parent.appendChild(container);
@@ -42,118 +46,47 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		if (!splashScreen) {
 			return;
 		}
-
 		splashScreen.style.opacity = "0";
-
 		setTimeout(() => {
 			splashScreen.remove();
 		}, 500);
 	}
 
 	let shown = false;
-	function show(animationType, time) {
+	function show({ x = "-100vw", y = "0px", opacity = 1, scale = 1, time } = {}) {
+		hiddenPosition = `translate3d(${x}, ${y}, 0px) scale(${scale})`;
+		hiddenOpacity = opacity;
 		currentZIndex++;
-		console.log("Showing fullscreen, z-index: " + currentZIndex);
 		container.style.zIndex = currentZIndex;
-		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
-		switch (animationType) {
-			case "slideFromTop":
-				startShowAnimation({ top: "-100vh" });
-				break;
-			case "slideFromBottom":
-				startShowAnimation({ top: "100vh" });
-				break;
-			case "slideFromLeft":
-				startShowAnimation({ left: "-100vw" });
-				break;
-			case "slideFromRight":
-				startShowAnimation({ left: "100vw" });
-				break;
-			case "fade":
-				startShowAnimation({});
-				break;
-			case "scale":
-				startShowAnimation({ left: "50vw", top: "50vh", height: "0", width: "0" });
-				break;
-			default:
-				startShowAnimation({ left: "-100vw" });
-				break;
+		if (time && typeof time !== "number") {
+			defaultAnimationTime = time ;
 		}
-		function startShowAnimation({ top = "0", left = "0", opacity = "0", height = "100%", width = "100%", transition }) {
+		window.requestAnimationFrame(() => {
+			container.style.transition = "all 0s";
+			container.style.overflow = "hidden";
+			container.style.opacity = hiddenOpacity;
+			container.style.transform = hiddenPosition;
 			window.requestAnimationFrame(() => {
-				container.style.overflow = "hidden";
-				container.style.transition = "all 0s";
-				container.style.opacity = opacity;
-				container.style.left = left;
-				container.style.top = top;
-				container.style.height = height;
-				container.style.width = width;
-				window.requestAnimationFrame(() => {
-					container.style.transition = `all ${animationTime / 1000}s`;
-					container.style.opacity = "1";
-					container.style.left = "0";
-					container.style.top = "0";
-					container.style.height = "100%";
-					container.style.width = "100%";
-				});
+				container.style.transition = `transform ${defaultAnimationTime / 1000}s`;
+				container.style.opacity = "1";
+				container.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
 			});
-		}
+		});
 		shown = true;
 	}
 
-	function hide(type, time) {
+	function hide() {
 		if (!shown) {
 			throw new Error("The plugin is already hidden!");
 		}
-
-		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
-		switch (type) {
-			case "slideToTop":
-				startHideAnimation({ top: "-100vh" });
-				break;
-			case "slideToBottom":
-				startHideAnimation({ top: "100vh" });
-				break;
-			case "slideToLeft":
-				startHideAnimation({ left: "-100vw" });
-				break;
-			case "slideToRight":
-				startHideAnimation({ left: "100vw" });
-				break;
-			case "fade":
-				startHideAnimation({ });
-				setTimeout(() => {
-					container.style.transition = "all 0s";
-					container.style.left = "100vw";
-				}, animationTime);
-				break;
-			case "scale":
-				startHideAnimation({ left: "50vw", top: "50vh", width: "0", height: "0" });
-				break;
-			default:
-				startHideAnimation({ left: "-100vw" });
-				break;
-		}
-		function startHideAnimation({ top = "0", left = "0", opacity = "0", height = "100%", width = "100%", transition }) {
-			window.requestAnimationFrame(() => {
-				container.style.overflow = "hidden";
-				container.style.transition = `all ${animationTime / 1000}s`;
-				container.style.opacity = opacity;
-				container.style.left = left;
-				container.style.top = top;
-				container.style.height = height;
-				container.style.width = width;
-			});
-		}
-
-		return new Promise((resolve, reject) => {
-			if (!container) {
-				reject(new Error("Plugin is already destroyed!"));
-			}
-			setTimeout(() => {
-				resolve();
-			}, time);
+		window.requestAnimationFrame(() => {
+			container.style.overflow = "hidden";
+			container.style.transition = `all ${defaultAnimationTime / 1000}s`;
+			container.style.opacity = hiddenOpacity;
+			container.style.transform = hiddenPosition;
 		});
+
+		shown = false;
 	}
 
 	async function destroy() {
