@@ -16,7 +16,7 @@ export function createInitPlugin({ data, settings, hooks }, { container, src, be
 	return initPlugin({ data, settings, hooks }, { currentWindow: window, targetWindow: pluginIframe.contentWindow, timeout, container });
 }
 
-export default function initPlugin({ data, settings, hooks }, { currentWindow, targetWindow, timeout = 5000, container }) {
+export default function initPlugin({ data, settings, hooks }, { currentWindow, targetWindow, timeout = 15000, container }) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	messageSocket.addListener("error", payload => console.warn(payload));
