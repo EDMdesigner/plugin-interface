@@ -26,13 +26,13 @@ export default function providePlugin({ hooks = [], methods = {}, validator = nu
 		messageSocket.addListener("init", onInit, { once: true });
 
 		// eslint-disable-next-line no-shadow
-		function onInit({ data = null, settings = null, hooks = [] } = {}) {
+		async function onInit({ data = null, settings = null, hooks = [] } = {}) {
 			try {
 				if (!hooks.includes("error")) {
 					hooks.push("error");
 				}
 				if (typeof validator === "function") {
-					validator({ data, settings, hooks });
+					await validator({ data, settings, hooks });
 				}
 				const hookFunctions = {};
 
