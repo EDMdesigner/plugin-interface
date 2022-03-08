@@ -33,7 +33,7 @@ export default function initPlugin({ data, settings, hooks }, { currentWindow, t
 			if (container?.remove && typeof container.remove === "function") {
 				container.remove();
 			}
-			reject(new Error("Plugin initialization failed with timeout! You can try to increase the timeout value in the plugin settings. Default value is 5000ms."));
+			reject(new Error("Plugin initialization failed with timeout! You can try to increase the timeout value in the plugin settings. Default value is 15000ms."));
 		}, timeout);
 
 		async function onDomReady() {
