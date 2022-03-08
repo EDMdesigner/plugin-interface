@@ -1,12 +1,14 @@
 /* eslint-disable no-unused-vars */
 import { createInitPlugin } from "./initPlugin.js";
 
-export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { beforeInit = null, timeout }) {
+let currentZIndex = 0;
+
+export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { parentElem, beforeInit = null, timeout }) {
 	const defaultAnimationTime = 500;
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
-	container.style.zIndex = "99999999";
+	container.style.zIndex = 0;
 	// Hide to the top
 	container.style.top = "-101vh";
 	container.style.left = "0";
@@ -14,7 +16,8 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	container.style.height = "100%";
 	container.style.transition = `all ${defaultAnimationTime / 1000}s`;
 
-	document.body.appendChild(container);
+	const parent = parentElem || document.body;
+	parent.appendChild(container);
 
 	let splashScreen;
 	function showSplashScreen() {
@@ -49,6 +52,9 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 
 	let shown = false;
 	function show(animationType, time) {
+		currentZIndex++;
+		console.log("Showing fullscreen, z-index: " + currentZIndex);
+		container.style.zIndex = currentZIndex;
 		const animationTime = typeof time === "number" ? time : defaultAnimationTime;
 		switch (animationType) {
 			case "slideFromTop":
@@ -165,7 +171,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		};
 	}
 
-	const { methods } = await createInitPlugin({ data, settings, hooks }, { container, src }, beforeInit);
+	const { methods } = await createInitPlugin({ data, settings, hooks }, { container, src, beforeInit, timeout });
 
 	return {
 		_container: container,
