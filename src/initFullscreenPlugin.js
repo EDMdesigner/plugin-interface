@@ -11,7 +11,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	container.style.left = "0";
 	container.style.zIndex = 0;
 	// Hide to the top
-	let defaultAnimationTime = 1500;
+	let defaultAnimationTime = 500;
 	let hiddenPosition = "translate3d(-100vw, 0px, 0px) scale(1)";
 	let hiddenOpacity = 0;
 	container.style.transform = hiddenPosition;
@@ -53,7 +53,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 	}
 
 	let shown = false;
-	function show({ x = "-100vw", y = "0px", opacity = 1, scale = 1, time } = {}) {
+	function show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time } = {}) {
 		hiddenPosition = `translate3d(${x}, ${y}, 0px) scale(${scale})`;
 		hiddenOpacity = opacity;
 		currentZIndex++;
@@ -61,6 +61,7 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		if (time && typeof time !== "number") {
 			defaultAnimationTime = time ;
 		}
+		shown = true;
 		window.requestAnimationFrame(() => {
 			container.style.transition = "all 0s";
 			container.style.overflow = "hidden";
@@ -72,7 +73,6 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 				container.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
 			});
 		});
-		shown = true;
 	}
 
 	function hide() {
