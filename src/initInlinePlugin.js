@@ -1,6 +1,6 @@
 import { createInitPlugin } from "./initPlugin.js";
 
-export default async function initInlinePlugin({ container, src, data, settings, hooks }, { beforeInit, timeout }) {
+export default async function initInlinePlugin({ data, settings, hooks }, { container, src, beforeInit, timeout }) {
 	const { methods } = await createInitPlugin({
 		data,
 		settings,
