@@ -3,7 +3,7 @@ import { createInitPlugin } from "./initPlugin.js";
 
 let currentZIndex = 0;
 
-export default async function initFullscreenPlugin({ id, src, data, settings, hooks }, { parentElem, beforeInit = null, timeout }) {
+export default async function initFullscreenPlugin({ data, settings, hooks }, { id, src, parentElem, beforeInit = null, timeout }) {
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
