@@ -45,11 +45,18 @@ export default function providePlugin({ hooks = [], methods = {}, validator = nu
 					};
 				});
 
+				// We have to wrap the function to resolve since the
+				// private field implementation in ES6 doesn't allow
+				// resolve directly the function. It gives and error.
+				const terminate = () => {
+					messageSocket.terminate();
+				};
+
 				resolveProvidePlugin({
 					data,
 					settings,
 					hooks: hookFunctions,
-					terminate: messageSocket.terminate,
+					terminate,
 				});
 			} catch (error) {
 				rejectProvidePlugin(error);

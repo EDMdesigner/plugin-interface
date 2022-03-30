@@ -13,19 +13,23 @@ export default class PostMessageSocket {
 	}
 
 	getDocument() {
+		if (this.#isTerminated) return;
 		return this.#currentWindow.document;
 	}
 
 	addListener(type, callback, { once = false } = {}) {
+		if (this.#isTerminated) return;
 		if (!this.#currentWindow) return;
 		this.#listeners[type] = { callback, once };
 	}
 
 	#removeListener(type) {
+		this.#listeners[type] = null;
 		delete this.#listeners[type];
 	}
 
 	sendMessage(type, payload) {
+		if (this.#isTerminated) return;
 		if (!this.#targetWindow && this.#isTerminated) return;
 		const msgId = this.#getNextMsgId();
 		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId, waitForResponse: false }), "*");
@@ -33,6 +37,7 @@ export default class PostMessageSocket {
 	}
 
 	sendRequest(type, payload) {
+		if (this.#isTerminated) return;
 		if (!this.#targetWindow && this.#isTerminated) return;
 		const msgId = this.#getNextMsgId();
 		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId, waitForResponse: true }), "*");
@@ -40,6 +45,7 @@ export default class PostMessageSocket {
 	}
 
 	#waitForResponse(msgId) {
+		if (this.#isTerminated) return;
 		return new Promise((resolveWaitForResponse, rejectWaitForResponse) => {
 			const waitForResponse = (event) => {
 				if (event.source !== this.#targetWindow) return;
@@ -71,6 +77,7 @@ export default class PostMessageSocket {
 	}
 
 	async #onMessage(event) {
+		if (this.#isTerminated) return;
 		if (!!event.source && event.source !== this.#targetWindow) return;
 		let message;
 		try {
