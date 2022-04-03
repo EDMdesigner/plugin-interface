@@ -18,7 +18,7 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 	container.style.opacity = hiddenOpacity;
 	container.style.width = "100%";
 	container.style.height = "100%";
-	container.style.transition = `transform ${defaultAnimationTime / 1000}s easy-in-out`;
+	container.style.transition = "transform 0.5s easy-in-out";
 
 	const parent = parentElem || document.body;
 	parent.appendChild(container);
@@ -52,41 +52,49 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 		}, 500);
 	}
 
-	let shown = false;
-	function show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time } = {}) {
+	let isVisible = false;
+	function show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time = defaultAnimationTime } = {}) {
+		if (isVisible) return;
+		if (isNaN(time)) {
+			throw new Error("Animation time must be a number!");
+		}
+		defaultAnimationTime = time ;
 		hiddenPosition = `translate3d(${x}, ${y}, 0px) scale(${scale})`;
 		hiddenOpacity = opacity;
 		currentZIndex++;
 		container.style.zIndex = currentZIndex;
-		if (time && typeof time !== "number") {
-			defaultAnimationTime = time ;
-		}
-		shown = true;
-		window.requestAnimationFrame(() => {
-			container.style.transition = "all 0s";
-			container.style.overflow = "hidden";
-			container.style.opacity = hiddenOpacity;
-			container.style.transform = hiddenPosition;
-			window.requestAnimationFrame(() => {
-				container.style.transition = `transform ${defaultAnimationTime / 1000}s`;
-				container.style.opacity = "1";
-				container.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
-			});
+		container.style.transition = "transform 0s";
+		container.style.overflow = "hidden";
+		container.style.opacity = hiddenOpacity;
+		container.style.transform = hiddenPosition;
+
+		return new Promise((resolve) => {
+			container.style.transition = `transform ${time / 1000}s easy-in-out`;
+			container.style.opacity = "1";
+			container.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
+			isVisible = true;
+			const transitionEnded = () => {
+				container.removeEventListener("transitionend", transitionEnded);
+				resolve();
+			};
+			container.addEventListener("transitionend", transitionEnded);
 		});
 	}
 
 	function hide() {
-		if (!shown) {
-			throw new Error("The plugin is already hidden!");
-		}
-		window.requestAnimationFrame(() => {
+		if (!isVisible) return;
+		return new Promise((resolve) => {
 			container.style.overflow = "hidden";
-			container.style.transition = `all ${defaultAnimationTime / 1000}s`;
+			container.style.transition = `transform ${defaultAnimationTime / 1000}s`;
 			container.style.opacity = hiddenOpacity;
 			container.style.transform = hiddenPosition;
+			isVisible = false;
+			const transitionEnded = () => {
+				container.removeEventListener("transitionend", transitionEnded);
+				resolve();
+			};
+			container.addEventListener("transitionend", transitionEnded);
 		});
-
-		shown = false;
 	}
 
 	async function destroy() {
