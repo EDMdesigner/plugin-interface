@@ -18,7 +18,7 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 	container.style.opacity = hiddenOpacity;
 	container.style.width = "100%";
 	container.style.height = "100%";
-	container.style.transition = "transform 0.5s easy-in-out";
+	container.style.transition = "transform 0s";
 
 	const parent = parentElem || document.body;
 	parent.appendChild(container);
@@ -63,21 +63,20 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 		hiddenOpacity = opacity;
 		currentZIndex++;
 		container.style.zIndex = currentZIndex;
-		container.style.transition = "transform 0s";
 		container.style.overflow = "hidden";
 		container.style.opacity = hiddenOpacity;
 		container.style.transform = hiddenPosition;
 
 		return new Promise((resolve) => {
-			container.style.transition = `transform ${time / 1000}s easy-in-out`;
-			container.style.opacity = "1";
+			container.style.transition = `all ${time}ms`;
 			container.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
+			container.style.opacity = "1";
 			isVisible = true;
-			const transitionEnded = () => {
-				container.removeEventListener("transitionend", transitionEnded);
+			const transitionEnded = (e) => {
+				if (e.propertyName !== "opacity" && e.propertyName !== "transform") return;
 				resolve();
 			};
-			container.addEventListener("transitionend", transitionEnded);
+			container.addEventListener("transitionend", transitionEnded, { once: true });
 		});
 	}
 
@@ -89,11 +88,11 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 			container.style.opacity = hiddenOpacity;
 			container.style.transform = hiddenPosition;
 			isVisible = false;
-			const transitionEnded = () => {
-				container.removeEventListener("transitionend", transitionEnded);
+			const transitionEnded = (e) => {
+				if (e.propertyName !== "opacity" && e.propertyName !== "transform") return;
 				resolve();
 			};
-			container.addEventListener("transitionend", transitionEnded);
+			container.addEventListener("transitionend", transitionEnded, { once: true });
 		});
 	}
 
