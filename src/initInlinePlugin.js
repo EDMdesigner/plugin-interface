@@ -1,6 +1,6 @@
 import { createInitPlugin } from "./initPlugin.js";
 
-export default async function initInlinePlugin({ data, settings, hooks }, { container, src, beforeInit, timeout }) {
+export default async function initInlinePlugin({ data, settings, hooks }, { src, container, beforeInit = null, timeout }) {
 	const { methods } = await createInitPlugin({
 		data,
 		settings,
@@ -19,8 +19,8 @@ export default async function initInlinePlugin({ data, settings, hooks }, { cont
 	}
 
 	return {
+		_container: container,
 		methods,
 		destroy,
-		_container: container,
 	};
 }

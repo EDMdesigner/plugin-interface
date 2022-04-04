@@ -1,8 +1,6 @@
-/* eslint-disable no-unused-vars */
 import { createInitPlugin } from "./initPlugin.js";
 
 let currentZIndex = 0;
-
 export default async function initFullscreenPlugin({ data, settings, hooks }, { id, src, parentElem, beforeInit = null, timeout }) {
 	let container = document.createElement("div");
 	container.id = id;
@@ -25,21 +23,21 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 
 	let splashScreen;
 	function showSplashScreen() {
-		if (!settings.splashScreenUrl) {
-			return;
-		}
-		splashScreen = document.createElement("iframe");
-		splashScreen.src = settings.splashScreenUrl;
+		if (!settings.splashScreenUrl) return;
+		return new Promise((resolve) => {
+			splashScreen = document.createElement("iframe");
+			splashScreen.src = settings.splashScreenUrl;
 
-		splashScreen.style.position = "absolute";
-		splashScreen.style.top = "0";
-		splashScreen.style.left = "0";
-		splashScreen.style.width = "100%";
-		splashScreen.style.height = "100%";
-		splashScreen.style.opacity = "1";
-		splashScreen.style.transition = "opacity 0.5s";
-
-		container.appendChild(splashScreen);
+			splashScreen.style.position = "absolute";
+			splashScreen.style.top = "0";
+			splashScreen.style.left = "0";
+			splashScreen.style.width = "100%";
+			splashScreen.style.height = "100%";
+			splashScreen.style.opacity = "1";
+			splashScreen.style.transition = "opacity 0.5s";
+			container.appendChild(splashScreen);
+			splashScreen.addEventListener("load", resolve, { once: true });
+		});
 	}
 
 	function hideSplashScreen() {
