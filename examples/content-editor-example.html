@@ -8,13 +8,12 @@
         <div id="title"></div>
         <div>Description:</div>
         <div id="description"></div>
-        <button id="editButton">Edit</button>
+        <div id="editButtons"></div>
         <script>
             (async function() {
                 const initExampleSdk = (await import("./initExampleSdk.js")).default;
                 const sdk = await initExampleSdk({
                     settings: {
-                        splashScreenUrl: "https://chamaileon-sdk.github.io/splashscreen-and-logo-examples/splashScreen.html"
                     }
                 });
 
@@ -35,7 +34,11 @@
 
                 const contentEditorPlugin = await sdk.initContentEditorPlugin({
                     data,
-                    settings: { background: "#abcdef"},
+                    settings: { 
+                        background: "#abcdef",
+                        showAnimation: "scale",
+                        animationTime: 1000,
+                    },
                     hooks: {
                         onResetButtonClicked: async () => {
                             return data;
@@ -45,18 +48,29 @@
                             contentEditorPlugin.hide();
                         },
                         onClose: async () => {
-                            contentEditorPlugin.hide();
+                            contentEditorPlugin.hide(animationType, 300);
                         }
                     }
-                });
+                },
+                {});
 
-                document.getElementById("editButton").onclick = async () => {
-                    contentEditorPlugin.showSplashScreen();
-                    await contentEditorPlugin.methods.updateData(data);
-                    contentEditorPlugin.show();
-                    await new Promise(resolve => setTimeout(resolve, 400)); // simulate latency
-                    contentEditorPlugin.hideSplashScreen();
-                }
+                let animationType;
+
+                const animationTypes = ["slideFromLeft", "slideFromTop", "slideFromBottom", "slideFromRight", "fade", "scale"]
+
+                animationTypes.forEach((type)=>{
+                    let btn = document.createElement("button");
+                    btn.innerHTML = type;
+                    btn.onclick = async () => {
+                        contentEditorPlugin.showSplashScreen();
+                        await contentEditorPlugin.methods.updateData(data);
+                        contentEditorPlugin.show(type);
+                        animationType = type;
+                        await new Promise(resolve => setTimeout(resolve, 400)); // simulate latency
+                        contentEditorPlugin.hideSplashScreen();
+                    }
+                    document.getElementById("editButtons").appendChild(btn);
+                });
             }());
         </script>
     </body>

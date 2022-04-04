@@ -1,67 +1,96 @@
-/* eslint-disable no-unused-vars */
-import initPlugin from "./initPlugin.js";
+import { createInitPlugin } from "./initPlugin.js";
 
-export default async function initFullscreenPlugin({ id, src, data, settings, hooks }) {
+let currentZIndex = 0;
+export default async function initFullscreenPlugin({ data, settings, hooks }, { id, src, parentElem, beforeInit = null, timeout }) {
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
 	container.style.top = "0";
 	container.style.left = "0";
-	container.style.width = "100vw";
-	container.style.height = "100vh";
-	container.style.marginTop = "100vw";
-	container.style.transition = "margin-top 0.5s";
+	container.style.zIndex = 0;
+	// Hide to the top
+	let defaultAnimationTime = 500;
+	let hiddenPosition = "translate3d(-100vw, 0px, 0px) scale(1)";
+	let hiddenOpacity = 0;
+	container.style.transform = hiddenPosition;
+	container.style.opacity = hiddenOpacity;
+	container.style.width = "100%";
+	container.style.height = "100%";
+	container.style.transition = "transform 0s";
 
-	document.body.appendChild(container);
+	const parent = parentElem || document.body;
+	parent.appendChild(container);
 
 	let splashScreen;
 	function showSplashScreen() {
-		splashScreen = document.createElement("iframe");
-		splashScreen.src = settings.splashScreenUrl;
+		if (!settings.splashScreenUrl) return;
+		return new Promise((resolve) => {
+			splashScreen = document.createElement("iframe");
+			splashScreen.src = settings.splashScreenUrl;
 
-		splashScreen.style.position = "absolute";
-		splashScreen.style.top = "0";
-		splashScreen.style.left = "0";
-		splashScreen.style.width = "100%";
-		splashScreen.style.height = "100%";
-		splashScreen.style.opacity = "1";
-		splashScreen.style.transition = "opacity 0.5s";
-
-		container.appendChild(splashScreen);
+			splashScreen.style.position = "absolute";
+			splashScreen.style.top = "0";
+			splashScreen.style.left = "0";
+			splashScreen.style.width = "100%";
+			splashScreen.style.height = "100%";
+			splashScreen.style.opacity = "1";
+			splashScreen.style.transition = "opacity 0.5s";
+			container.appendChild(splashScreen);
+			splashScreen.addEventListener("load", resolve, { once: true });
+		});
 	}
 
 	function hideSplashScreen() {
 		if (!splashScreen) {
 			return;
 		}
-
 		splashScreen.style.opacity = "0";
-
 		setTimeout(() => {
 			splashScreen.remove();
 		}, 500);
 	}
 
-	let shown = false;
-	function show() {
-		container.style.marginTop = "0";
-		shown = true;
+	let isVisible = false;
+	function show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time = defaultAnimationTime } = {}) {
+		if (isVisible) return;
+		if (isNaN(time)) {
+			throw new Error("Animation time must be a number!");
+		}
+		defaultAnimationTime = time ;
+		hiddenPosition = `translate3d(${x}, ${y}, 0px) scale(${scale})`;
+		hiddenOpacity = opacity;
+		currentZIndex++;
+		container.style.zIndex = currentZIndex;
+		container.style.overflow = "hidden";
+		container.style.opacity = hiddenOpacity;
+		container.style.transform = hiddenPosition;
+
+		return new Promise((resolve) => {
+			container.style.transition = `all ${time}ms`;
+			container.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
+			container.style.opacity = "1";
+			isVisible = true;
+			const transitionEnded = (e) => {
+				if (e.propertyName !== "opacity" && e.propertyName !== "transform") return;
+				resolve();
+			};
+			container.addEventListener("transitionend", transitionEnded, { once: true });
+		});
 	}
 
 	function hide() {
-		if (!shown) {
-			throw new Error("The plugin is already hidden!");
-		}
-
-		container.style.marginTop = "100vh";
-
-		return new Promise((resolve, reject) => {
-			if (!container) {
-				reject(new Error("Plugin is already destroyed!"));
-			}
-			setTimeout(() => {
+		if (!isVisible) return;
+		return new Promise((resolve) => {
+			container.style.overflow = "hidden";
+			container.style.transition = `transform ${defaultAnimationTime / 1000}s`;
+			container.style.opacity = hiddenOpacity;
+			container.style.transform = hiddenPosition;
+			isVisible = false;
+			const transitionEnded = (e) => {
+				if (e.propertyName !== "opacity" && e.propertyName !== "transform") return;
 				resolve();
-			}, 500);
+			};
+			container.addEventListener("transitionend", transitionEnded, { once: true });
 		});
 	}
 
@@ -71,18 +100,21 @@ export default async function initFullscreenPlugin({ id, src, data, settings, ho
 		container = null;
 	}
 
-	// eslint-disable-next-line no-unused-vars
-	// eslint-disable-next-line no-shadow
-	function beforeInit({ container, iframe }) {
-		iframe.style.width = "100%";
-		iframe.style.height = "100%";
+	let _beforeInit = beforeInit;
+
+	if (!_beforeInit || typeof _beforeInit !== "function") {
+		_beforeInit = function ({ iframe }) {
+			iframe.style.width = "100%";
+			iframe.style.height = "100%";
+		};
 	}
 
-	const plugin = await initPlugin({ container, src, data, settings, hooks }, { beforeInit });
+	const { methods } = await createInitPlugin({ data, settings, hooks }, { container, src, beforeInit, timeout });
 
 	return {
-		...plugin,
-
+		_container: container,
+		_src: src,
+		methods,
 		showSplashScreen,
 		hideSplashScreen,
 		show,

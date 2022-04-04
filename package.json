@@ -1,10 +1,23 @@
 {
-	"name": "plugin-interface",
-	"version": "0.0.0",
+	"name": "@chamaileon-sdk/plugin-interface",
+	"version": "0.4.0",
+	"main": "./dist/main.umd.js",
+	"module": "./dist/main.es.js",
+	"files": ["dist", "src", "test"],
+	"exports": {
+		".": {
+			"import": "./dist/main.es.js",
+			"require": "./dist/main.umd.js"
+		}
+	},
+	"publishConfig": {
+		"registry":"https://registry.npmjs.org/"
+	},
 	"scripts": {
-		"dev": "vite",
+		"dev": "vite build --watch",
 		"build": "vite build",
 		"preview": "vite preview",
+		"semverCheck": "node scripts/semverCheck.js",
 		"test": "jest",
 		"test:watch": "jest --watch"
 	},
@@ -12,12 +25,11 @@
 		"@EDMdesigner/eslint-config-edmdesigner": "^2.1.2",
 		"jest": "^27.4.7",
 		"vite": "^2.7.2",
-		"@babel/core": "^7.16.12",
+		"@babel/core": " ^7.16.12",
 		"@babel/preset-env": "^7.16.11",
 		"babel-jest": "^27.4.6",
 		"regenerator-runtime": "^0.13.9",
-		"jsdom": "^19.0.0"
-	},
-	"dependencies": {
+		"jsdom": "^19.0.0",
+		"semver": "5.6.0"
 	}
 }

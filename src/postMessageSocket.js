@@ -12,23 +12,32 @@ export default class PostMessageSocket {
 		this.#setupSocket();
 	}
 
+	getDocument() {
+		if (this.#isTerminated) return;
+		return this.#currentWindow.document;
+	}
+
 	addListener(type, callback, { once = false } = {}) {
+		if (this.#isTerminated) return;
 		if (!this.#currentWindow) return;
 		this.#listeners[type] = { callback, once };
 	}
 
 	#removeListener(type) {
+		this.#listeners[type] = null;
 		delete this.#listeners[type];
 	}
 
 	sendMessage(type, payload) {
+		if (this.#isTerminated) return;
 		if (!this.#targetWindow && this.#isTerminated) return;
 		const msgId = this.#getNextMsgId();
 		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId, waitForResponse: false }), "*");
-		return this.#waitForResponse(msgId, false);
+		return this.#waitForResponse(msgId);
 	}
 
 	sendRequest(type, payload) {
+		if (this.#isTerminated) return;
 		if (!this.#targetWindow && this.#isTerminated) return;
 		const msgId = this.#getNextMsgId();
 		this.#targetWindow.postMessage(JSON.stringify({ type, payload, msgId, waitForResponse: true }), "*");
@@ -36,7 +45,8 @@ export default class PostMessageSocket {
 	}
 
 	#waitForResponse(msgId) {
-		return new Promise((resolve, reject) => {
+		if (this.#isTerminated) return;
+		return new Promise((resolveWaitForResponse, rejectWaitForResponse) => {
 			const waitForResponse = (event) => {
 				if (event.source !== this.#targetWindow) return;
 
@@ -48,19 +58,16 @@ export default class PostMessageSocket {
 					const response = this.#tryParse(event);
 					if (response.msgId !== msgId) return;
 					event.stopPropagation();
-
 					this.#currentWindow.removeEventListener("message", listener.handler, listener.useCapture);
 					this.#appliedEventListeners.splice(index, 1);
 
 					if (response.error) {
-						reject(new Error(response.error));
+						rejectWaitForResponse(new Error(response.error));
 					} else {
-						resolve(response.payload);
+						resolveWaitForResponse(response.payload);
 					}
 				} catch (error) {
-					this.#currentWindow.removeEventListener("message", listener.handler, listener.useCapture);
-					this.#appliedEventListeners.splice(index, 1);
-					reject(new Error(error));
+					return;
 				}
 			};
 			const handler = waitForResponse.bind(this);
@@ -70,10 +77,15 @@ export default class PostMessageSocket {
 	}
 
 	async #onMessage(event) {
+		if (this.#isTerminated) return;
 		if (!!event.source && event.source !== this.#targetWindow) return;
-
-		const message = this.#tryParse(event);
-		if (!message) return;
+		let message;
+		try {
+			message = this.#tryParse(event);
+		} catch (error) {
+			return;
+		}
+		if (!message) return; // TODO: We have to renspond with an error or it will timeout
 
 		const listener = this.#listeners[message.type];
 		if (!listener) return;
@@ -82,7 +94,7 @@ export default class PostMessageSocket {
 			const response = { msgId: message.msgId };
 
 			if (error) {
-				response.error = error.message || "Unexpected error";
+				response.error = typeof error === "string" ? error : error?.message || "Unexpected error";
 			} else {
 				response.payload = payload;
 			}

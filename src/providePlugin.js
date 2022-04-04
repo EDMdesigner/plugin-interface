@@ -1,66 +1,68 @@
-/* eslint-disable require-await */
-/* eslint-disable no-shadow */
-import PostMessageSocket from "./postMessageSocket.js";
+import PostMessageSocket from "./postMessageSocket";
 
-export default function providePlugin({ settings = {}, hookNames = [], methods = {} }, _socket = null) {
-	return new Promise((resolve) => {
-		let socket = _socket;
-		if (!socket) {
-			socket = new PostMessageSocket(window, window.parent);
-		}
+export default function providePlugin({ hooks = [], methods = {}, validator = null } = {}, currentWindow = window, targetWindow = window.parent) {
+	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
-		socket.addListener("init", onInit, { once: true });
+	const providedHooks = hooks;
+	if (!providedHooks.includes("error")) {
+		providedHooks.push("error");
+	}
 
-		if (document.readyState === "loading") {
-			document.addEventListener("DOMContentLoaded", sendDomReady);
-		} else {
-			sendDomReady();
-		}
+	Object.keys(methods).forEach((methodName) => {
+		messageSocket.addListener(methodName, payload => methods[methodName](payload));
+	});
 
-		// eslint-disable-next-line require-await
-		async function sendDomReady() {
-			// await new Promise(resolve => setTimeout(resolve, 500));
+	function sendDomReady() {
+		messageSocket.sendMessage("domReady", {});
+	}
 
-			socket.sendMessage("domReady", {
-				config: {
-					settings,
-					hookNames,
-					methods: Object.keys(methods),
-				},
-			});
+	if (messageSocket.getDocument().readyState === "loading") {
+		messageSocket.getDocument().addEventListener("DOMContentLoaded", sendDomReady, { once: true });
+	} else {
+		sendDomReady();
+	}
 
-			document.removeEventListener("DOMContentLoaded", sendDomReady);
-		}
+	return new Promise((resolveProvidePlugin, rejectProvidePlugin) => {
+		messageSocket.addListener("init", onInit, { once: true });
 
-		async function onInit(config) {
-			listenForRequests();
+		// eslint-disable-next-line no-shadow
+		async function onInit({ data = null, settings = null, hooks = [] } = {}) {
+			try {
+				if (!hooks.includes("error")) {
+					hooks.push("error");
+				}
+				if (typeof validator === "function") {
+					await validator({ data, settings, hooks });
+				}
+				const hookFunctions = {};
 
-			await new Promise(resolve => setTimeout(resolve, 500));
+				hooks.forEach((hook) => {
+					if (!providedHooks.includes(hook)) {
+						return messageSocket.sendMessage("error", `The following hook is not valid: ${hook}`);
+					}
+					hookFunctions[hook] = async (payload) => {
+						return await messageSocket.sendRequest(hook, payload);
+					};
+				});
 
-			const hookFunctions = hookNames.reduce((hooks, hookName) => {
-				return {
-					...hooks,
-					[hookName]: async (payload) => {
-						if (!config.hooks.includes(hookName)) {
-							throw new Error(`The following hook is not configured: ${hookName}`);
-						}
-
-						return socket.sendRequest(hookName, payload);
-					},
+				// We have to wrap the function to resolve since the
+				// private field implementation in ES6 doesn't allow
+				// resolve directly the function. It gives and error.
+				const terminate = () => {
+					messageSocket.terminate();
 				};
-			}, {});
 
-			resolve({
-				data: config.data,
-				settings: config.settings,
-				hooks: hookFunctions,
-			});
-		}
-
-		async function listenForRequests() {
-			Object.keys(methods).forEach((methodName) => {
-				socket.addListener(methodName, payload => methods[methodName](payload));
-			});
+				resolveProvidePlugin({
+					data,
+					settings,
+					hooks: hookFunctions,
+					terminate,
+				});
+			} catch (error) {
+				rejectProvidePlugin(error);
+				throw new Error(error.message);
+			}
+			return Object.keys(methods);
 		}
 	});
 }

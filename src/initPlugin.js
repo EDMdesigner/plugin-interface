@@ -1,13 +1,11 @@
 import PostMessageSocket from "./postMessageSocket.js";
 
-// function validateConfig({ settings, hooks }, config) {
-// 	// settings validation is quite hard, we would need a full-fledged json/object-tree validation
-// }
-
-export default function initPlugin({ container, src, data = {}, settings = {}, hooks = {} }, { timeout = 5000, beforeInit } = {}) {
+export function createInitPlugin({ data, settings, hooks }, { container, src, beforeInit, timeout }) {
 	const pluginIframe = document.createElement("iframe");
 	pluginIframe.src = src;
 	pluginIframe.allowFullscreen = "allowfullscreen";
+	pluginIframe.style.width = "100%";
+	pluginIframe.style.height = "100%";
 
 	if (typeof beforeInit === "function") {
 		beforeInit({ container, iframe: pluginIframe });
@@ -15,44 +13,44 @@ export default function initPlugin({ container, src, data = {}, settings = {}, h
 
 	container.appendChild(pluginIframe);
 
-	const socket = new PostMessageSocket(window, pluginIframe.contentWindow);
-	window.initSocket = socket;
+	return initPlugin({ data, settings, hooks }, { currentWindow: window, targetWindow: pluginIframe.contentWindow, timeout, container });
+}
 
-	return new Promise((resolve) => {
-		socket.addListener("domReady", onDomReady, { once: true });
+export default function initPlugin({ data, settings, hooks }, { currentWindow, targetWindow, timeout = 15000, container }) {
+	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
-		async function onDomReady(payload) {
-			// validateConfig({ settings, hooks }, payload.config);
-			await socket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) }, { timeout });
-			listenForRequests();
+	messageSocket.addListener("error", payload => console.warn(payload));
 
-			const methodNames = payload.config.methods;
+	Object.keys(hooks).forEach((hook) => {
+		messageSocket.addListener(hook, payload => hooks[hook](payload));
+	});
 
-			const methods = methodNames.reduce((method, methodName) => {
-				return {
-					...method,
-					// eslint-disable-next-line require-await
-					[methodName]: async (p) => {
-						if (!methodNames.includes(methodName)) {
-							throw new Error(`Naughty boy! Don't request ${"type"}!`);
-						}
+	return new Promise((resolve, reject) => {
+		messageSocket.addListener("domReady", onDomReady, { once: true });
 
-						return socket.sendRequest(methodName, p);
-					},
-				};
-			}, {});
-
-			// eslint-disable-next-line require-await
-			async function listenForRequests() {
-				Object.keys(hooks).forEach((hookName) => {
-					socket.addListener(hookName, p => hooks[hookName](p));
-				});
+		const timetoutID = setTimeout(() => {
+			messageSocket.terminate();
+			if (container?.remove && typeof container.remove === "function") {
+				container.remove();
 			}
+			reject(new Error("Plugin initialization failed with timeout! You can try to increase the timeout value in the plugin settings. Default value is 15000ms."));
+		}, timeout);
+
+		async function onDomReady() {
+			const answer = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
+			const methods = {};
+
+			answer.forEach((type) => {
+				methods[type] = async (payload) => {
+					return await messageSocket.sendRequest(type, payload);
+				};
+			});
+
+			clearTimeout(timetoutID);
 
 			resolve({
-				_container: container,
-				_iframe: pluginIframe,
 				methods,
+				terminate: messageSocket.terminate,
 			});
 		}
 	});
