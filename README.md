@@ -5,7 +5,7 @@
 **Chamaileon.io built and maintains this open-source project to provide a secure and standardized way to use its plugins**, the email editor, preview, gallery etc. To check out our webpage visit [chamaileon.io](https://chamaileon.io).
 ## Installation
 
-`npm i chamaileon-sdk/plugininterface`
+`npm i chamaileon-sdk/plugin-interface`
 
 
 After installation you can use two functions, “initFullscreenPlugin” and “initInlinePlugin“, to start initializing the interface. From the created Iframe you have to run the providePlugin function to complete the initialisation. 
