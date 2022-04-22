@@ -7,7 +7,7 @@
 ## Installation
 
 ```bash
-npm i chamaileon-sdk/plugin-interface
+npm i @chamaileon-sdk/plugin-interface
 ```
 
 After installation you can use two functions, `initFullscreenPlugin` and `initInlinePlugin`, to start initializing the interface. From the created Iframe you have to run the providePlugin function to complete the initialization.
