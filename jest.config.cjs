@@ -1,22 +1,17 @@
 const config = {
-	setupFilesAfterEnv: [ "./test/unit/setupTests.js" ],
 	testEnvironment: "jsdom",
+	verbose: true,
 	moduleFileExtensions: [
 		"js",
 	],
-	transform: {
-		"^.+\\.(js|jsx)$": "babel-jest",
-	},
+	transform: {},
 	moduleNameMapper: {
 		"^@/(.*)$": "<rootDir>/src/$1",
 	},
-	transformIgnorePatterns: [
-		"node_modules/(?!@EDMdesigner)",
-	],
+	transformIgnorePatterns: [],
 	testMatch: [
-		"**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)",
+		"**/?(*.)+(spec|test).[jt]s?(x)",
 	],
-	testURL: "http://localhost/",
 	collectCoverage: true,
 	collectCoverageFrom: [
 		"src/**/*.{js,jsx}",
