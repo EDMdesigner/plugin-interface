@@ -46,7 +46,7 @@ describe("provide plugin tests", function () {
 			warnings.length = 0;
 		});
 
-		it("send domReady postmessage and receive an init message", async function () {
+		it("send domReady postMessage and receive an init message", async function () {
 			windowSocket.addListener("domReady", (payload) => {
 				messages.push(payload);
 				windowSocket.sendMessage("init");
@@ -60,7 +60,7 @@ describe("provide plugin tests", function () {
 			expect(messages).toHaveLength(1);
 		});
 
-		it("send domReady postmessage and receive an init message, after waiting for loading", async function () {
+		it("send domReady postMessage and receive an init message, after waiting for loading", async function () {
 			windowSocket.addListener("domReady", (payload) => {
 				messages.push(payload);
 				windowSocket.sendMessage("init");
@@ -148,8 +148,6 @@ describe("provide plugin tests", function () {
 					});
 				}, { once: true });
 
-				// eslint-disable-next-line no-shadow
-
 				await providePlugin({
 					settings: { isButtonClickable: true },
 					hooks,
@@ -167,7 +165,7 @@ describe("provide plugin tests", function () {
 			await expect(methods).rejects.toStrictEqual(error);
 		});
 
-		it("send a warning if finds an unknown hook", async function () {
+		it("send a warning if it finds an unknown hook", async function () {
 			windowSocket.addListener("error", function (error) {
 				console.warn(error);
 			});

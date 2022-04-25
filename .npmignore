@@ -3,6 +3,7 @@ coverage
 .DS_Store
 dist-ssr
 *.local
+.husky
 
 # local env files
 .env.local

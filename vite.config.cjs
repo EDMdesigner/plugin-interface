@@ -7,10 +7,14 @@ module.exports = defineConfig({
 	build: {
 		outDir: "./dist",
 		target: "es2015",
+		sourcemap: true,
 		lib: {
 			entry: path.resolve(__dirname, "./src/main.js"),
-			name: "Chamaileon Plugin Interface",
-			fileName: format => `main.${format}.js`,
+			name: "pluginInterface",
+			fileName: (format) => {
+				if (format === "umd") return "pluginInterface.js";
+				return `pluginInterface.${format}.js`;
+			},
 		},
 	},
 });
