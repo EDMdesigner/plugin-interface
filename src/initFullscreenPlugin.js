@@ -16,6 +16,9 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 	container.style.opacity = hiddenOpacity;
 	container.style.width = "100%";
 	container.style.height = "100%";
+	container.style.border = "0";
+	container.style.margin = "0";
+	container.style.padding = "0";
 	container.style.transition = "transform 0s";
 
 	const parent = parentElem || document.body;
@@ -34,6 +37,9 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 			splashScreen.style.width = "100%";
 			splashScreen.style.height = "100%";
 			splashScreen.style.opacity = "1";
+			splashScreen.style.border = "0";
+			splashScreen.style.margin = "0";
+			splashScreen.style.padding = "0";
 			splashScreen.style.transition = "opacity 0.5s";
 			container.appendChild(splashScreen);
 			splashScreen.addEventListener("load", resolve, { once: true });
@@ -56,7 +62,7 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 		if (isNaN(time)) {
 			throw new Error("Animation time must be a number!");
 		}
-		defaultAnimationTime = time ;
+		defaultAnimationTime = time;
 		hiddenPosition = `translate3d(${x}, ${y}, 0px) scale(${scale})`;
 		hiddenOpacity = opacity;
 		currentZIndex++;

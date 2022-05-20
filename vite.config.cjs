@@ -12,8 +12,8 @@ module.exports = defineConfig({
 			entry: path.resolve(__dirname, "./src/main.js"),
 			name: "pluginInterface",
 			fileName: (format) => {
-				if (format === "umd") return "pluginInterface.js";
-				return `pluginInterface.${format}.js`;
+				if (format === "umd") return "pluginInterface.cjs";
+				return "pluginInterface.js";
 			},
 		},
 	},
