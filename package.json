@@ -1,15 +1,29 @@
 {
 	"name": "@chamaileon-sdk/plugin-interface",
-	"version": "0.5.0",
+	"version": "0.5.1",
+	"keywords": [
+		"postMessage",
+		"interface",
+		"iframe"
+	],
+	"homepage": "https://github.com/EDMdesigner/plugin-interface#readme",
+	"bugs": {
+		"url": "https://github.com/EDMdesigner/plugin-interface/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/EDMdesigner/plugin-interface.git"
+	},
+	"license": "MIT",
 	"type": "module",
 	"exports": {
 		".": {
-			"import": "./dist/pluginInterface.es.js",
-			"require": "./dist/pluginInterface.js"
+			"import": "./dist/pluginInterface.js",
+			"require": "./dist/pluginInterface.cjs"
 		}
 	},
-	"main": "./dist/pluginInterface.js",
-	"module": "./dist/pluginInterface.es.js",
+	"main": "./dist/pluginInterface.cjs",
+	"module": "./dist/pluginInterface.js",
 	"files": [
 		"dist"
 	],
