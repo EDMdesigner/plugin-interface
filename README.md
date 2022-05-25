@@ -97,38 +97,6 @@ The `show` function provides an easy way to customize your show animation. With 
 
 The default hidden state is moved to the left, so the `show` function will move the plugin to view form the left.
 
-### Example
-```html
-<html>
-<body>
-	<div id="pluginWrapper"></div>
-</body>
-</html>
-```
-```js
-import { initFullscreenPlugin } from "@chamaileon-sdk/plugin-interface";
-const myPlugin = await initFullscreenPlugin({
-	data: {},
-	settings: {
-		buttons: {
-			header: [],
-		},
-	},
-	hooks: {
-		close: () => {
-			Vue.prototype.$chamaileon.emailPreview.hide();
-		},
-		onHeaderButtonClicked: ({ buttonId }) => {
-			console.info("Button clicked: " + buttonId);
-		},
-	},
-}, {
-	id: "myPlugin",
-	src: "#pluginWrapper",
-	beforeInit: () => {},
-	timeout: 15000,
-});
-```
 ##  Inline plugin 
 To initialize an inline plugin, you have to call the `initInlinePlugin` function with the following parameters:
 
@@ -214,9 +182,54 @@ The providePlugin function should resolve to an object containing these fields:
 - **hooks:** Hooks that were sent at the init stage and were filtered with the list of hooks that are accepted by the plugin
 - **terminate:** A function designed to terminate the communication between the window objects.
 
-### Example
-
+## Example
+### Parent side
+```html
+<!-- index.html -->
+<html>
+<body>
+	<div id="pluginWrapper"></div>
+</body>
+<script src="main.js"></script>
+</html>
+```
 ```js
+// main.js
+import { initFullscreenPlugin } from "@chamaileon-sdk/plugin-interface";
+const myPlugin = await initFullscreenPlugin({
+	data: {},
+	settings: {
+		buttons: {
+			header: [],
+		},
+	},
+	hooks: {
+		close: () => {
+			myPlugin.hide();
+		},
+		onHeaderButtonClicked: ({ buttonId }) => {
+			console.info("Button clicked: " + buttonId);
+		},
+	},
+}, {
+	id: "myPlugin",
+	src: "http://route/to/my/plugin/html",
+	parentElem: "#pluginWrapper",
+	beforeInit: () => {},
+	timeout: 15000,
+});
+```
+### Plugin side
+```html
+<html>
+<body>
+	I am a plugin
+</body>
+<script src="plugin.js"></script>
+</html>
+```
+```js
+// plugin.js
 import { providePlugin } from "@chamaileon-sdk/plugin-interface";
 
 export function updateData(data = {}) {
