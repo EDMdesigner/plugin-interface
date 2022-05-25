@@ -97,7 +97,7 @@ show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time = 500 })
 The `show` function provides an easy way to customize your show animation. With the provided parameters, you can set the default hidden state, described by coordinates, opacity, and scale of the plugin, along with the time of the animation. When the function is ran, the plugin will move to fullscreen view from that hidden position. The animation uses the `translate3d` css function. Likewise, the `hide` function moves the plugin back to its set hidden state.
 
 The default hidden state is moved to the left, so the `show` function will move the plugin to view form the left.
-###  Inline plugin 
+##  Inline plugin 
 To initialize an inline plugin, you have to call the `initInlinePlugin` function with the following parameters:
 
 ```js
