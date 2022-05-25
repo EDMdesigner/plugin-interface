@@ -181,3 +181,31 @@ The providePlugin function should resolve to an object containing these fields:
 - **settings:** The settings that were sent at the init stage
 - **hooks:** Hooks that were sent at the init stage and were filtered with the list of hooks that are accepted by the plugin
 - **terminate:** A function designed to terminate the communication between the window objects.
+
+### Example
+
+```js
+import { providePlugin } from "@chamaileon-sdk/plugin-interface";
+
+export function updateData(data = {}) {
+	console.log(data);
+}
+
+export function updateSettings(settings = {}) {
+	console.log(settings);
+}
+
+const hooks = [
+	"onHeaderButtonClicked",
+	"close",
+];
+
+const methods = {
+	updateData,
+	updateSettings,
+};
+
+const validator = async () => {};
+
+export default async () => await providePlugin({ hooks, methods, validator });
+```
