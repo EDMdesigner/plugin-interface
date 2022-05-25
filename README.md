@@ -101,7 +101,6 @@ The default hidden state is moved to the left, so the `show` function will move 
 To initialize an inline plugin, you have to call the `initInlinePlugin` function with the following parameters:
 
 ```js
-import { initInlinePlugin } from "@chamaileon-sdk/plugin-interface";
 initInlinePlugin(
 	{
 		data: Object,
