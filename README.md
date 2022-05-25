@@ -24,12 +24,13 @@ A plugin initaialization consists of two parts:
 To initialize a fullscreen plugin, you have to call the `initFullscreenPlugin` function with the following parameters:
 
 ```js
-import { initFullscreenPlugin, initInlinePlugin } from "@chamaileon-sdk/plugin-interface";
+import { initFullscreenPlugin } from "@chamaileon-sdk/plugin-interface";
 initFullscreenPlugin(
 	{
 		data: Object,
 		settings: Object,
 		hooks: Object,
+	},
 	{
 		id: String,
 		src: String,
@@ -68,14 +69,14 @@ The `initFullscreenPlugin` function creates and iframe based on the `src` provid
 In the provided interface you will reach the following props:
 ```js
 {
-	_container,
-	_src,
-	methods,
-	showSplashScreen,
-	hideSplashScreen,
-	show,
-	hide,
-	destroy,
+	_container: HTMLElement,
+	_src: String,
+	methods: Object,
+	showSplashScreen: Function,
+	hideSplashScreen: Function,
+	show: Function,
+	hide: Function,
+	destroy: Function,
 }
 ```
 - **_container:** is and HTML element containing the plugin iframe
@@ -92,10 +93,6 @@ The `show` can be called with the following parameters:
 ```js
 show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time = 500 })
 ```
-| First Header  | Second Header |
-| ------------- | ------------- |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
 
 The `show` function provides an easy way to customize your show animation. With the provided parameters, you can set the default hidden state, described by coordinates, opacity, and scale of the plugin, along with the time of the animation. When the function is ran, the plugin will move to fullscreen view from that hidden position. The animation uses the `translate3d` css function. Likewise, the `hide` function moves the plugin back to its set hidden state.
 
@@ -104,6 +101,7 @@ The default hidden state is moved to the left, so the `show` function will move 
 To initialize an inline plugin, you have to call the `initInlinePlugin` function with the following parameters:
 
 ```js
+import { initInlinePlugin } from "@chamaileon-sdk/plugin-interface";
 initInlinePlugin(
 	{
 		data: Object,
@@ -147,15 +145,16 @@ The second object contains information for the library to create the iframe and 
 In the provided interface you will reach the following props:
 ```js
  {
-	_container,
-	methods,
-	destroy,
+	_container: HTMLElement,
+	methods: Object,
+	destroy: Function,
 }
 ```
 - **_container:** is and HTML element containing the plugin iframe
 - **methods:** through the methods object you can reach the plugins declared methods
 - **destroy:** this function removes the iframe from the container
 ## providePlugin
+When you plugin is loaded from the provided src, it has to call the `providePlugin` function, in order to respond to the plugin-interface initialization
 
 ```js
 providePlugin({
@@ -165,28 +164,19 @@ providePlugin({
 });
 ```
 
-You have to invoke the providePlugin inside the iframe and this will respond to the init function that created the iframe.
-
-#### Parameters
-
 - **hooks:** This is an array of hook names that the plugin accepts and uses
-
 - **methods:** These are functions can be called from outside and are used to interact directly with the plugin from the outside
-
-## Usage
-
-### Parent side
-
-After the initialization project
-The init functions should resolve to an object containing these fields:
-
-- **methods:** Contains the methods that are provided by the plugin.
-- **terminate:** A function designed to terminate the communication between the window objects.
-
-### Plugin side
-
+- **validator:** Is a function that will run when the provided `data`, `settings` and `hooks` arrive from the from the parent side
+### Interface
 The providePlugin function should resolve to an object containing these fields:
-
+```js
+{
+	data: Object,
+	settings: Object,
+	hooks: Object,
+	terminate: Function,
+}
+```
 - **data:** The data that was sent at the init stage
 - **settings:** The settings that were sent at the init stage
 - **hooks:** Hooks that were sent at the init stage and were filtered with the list of hooks that are accepted by the plugin
