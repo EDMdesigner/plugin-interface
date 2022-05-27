@@ -6,6 +6,9 @@ export function createInitPlugin({ data, settings, hooks }, { container, src, be
 	pluginIframe.allowFullscreen = "allowfullscreen";
 	pluginIframe.style.width = "100%";
 	pluginIframe.style.height = "100%";
+	pluginIframe.style.border = "0";
+	pluginIframe.style.margin = "0";
+	pluginIframe.style.padding = "0";
 
 	if (typeof beforeInit === "function") {
 		beforeInit({ container, iframe: pluginIframe });
