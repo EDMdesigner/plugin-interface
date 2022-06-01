@@ -144,7 +144,7 @@ The second object contains information for the library to create the iframe and 
 ### Interface
 In the provided interface you will reach the following props:
 ```js
- {
+{
 	_container: HTMLElement,
 	methods: Object,
 	destroy: Function,
