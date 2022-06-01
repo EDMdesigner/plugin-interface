@@ -88,10 +88,11 @@ If the `settings` param provided in the initialization object contains a `splash
 You can show and hide your created plugins with the provided `show` and `hide`. While using these functions, the plugin won`t be destroyed, it will keep its state while hidden.
 
 **Animations**
+
 The `show` can be called with the following parameters:
+
 ```js
 show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time = 500 })
-```
 
 The `show` function provides an easy way to customize your show animation. With the provided parameters, you can set the default hidden state, described by coordinates, opacity, and scale of the plugin, along with the time of the animation. When the function is ran, the plugin will move to fullscreen view from that hidden position. The animation uses the `translate3d` css function. Likewise, the `hide` function moves the plugin back to its set hidden state.
 
