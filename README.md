@@ -166,7 +166,7 @@ providePlugin({
 
 - **hooks:** This is an array of hook names that the plugin accepts and uses
 - **methods:** These are functions can be called from outside and are used to interact directly with the plugin from the outside
-- **validator:** Is a function that will run when the provided `data`, `settings` and `hooks` arrive from the from the parent side
+- **validator:** Is a function that will run when the provided `data`, `settings` and `hooks` arrive from the parent side
 ### Interface
 The providePlugin function should resolve to an object containing these fields:
 ```js
