@@ -196,7 +196,8 @@ The providePlugin function should resolve to an object containing these fields:
 ```js
 // main.js
 import { initFullscreenPlugin } from "@chamaileon-sdk/plugin-interface";
-const myPlugin = await initFullscreenPlugin({
+const myPlugin = await initFullscreenPlugin(
+{
 	data: {},
 	settings: {
 		buttons: {
@@ -211,7 +212,8 @@ const myPlugin = await initFullscreenPlugin({
 			console.info("Button clicked: " + buttonId);
 		},
 	},
-}, {
+},
+{
 	id: "myPlugin",
 	src: "http://route/to/my/plugin/html",
 	parentElem: "#pluginWrapper",
