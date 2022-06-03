@@ -234,7 +234,7 @@ const myPlugin = await initFullscreenPlugin(
 // plugin.js
 import { providePlugin } from "@chamaileon-sdk/plugin-interface";
 
-export function updateData(data = {}) {
+function updateData(data = {}) {
 	console.log(data);
 }
 
