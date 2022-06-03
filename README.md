@@ -238,7 +238,7 @@ function updateData(data = {}) {
 	console.log(data);
 }
 
-export function updateSettings(settings = {}) {
+function updateSettings(settings = {}) {
 	console.log(settings);
 }
 
