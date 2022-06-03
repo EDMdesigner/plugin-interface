@@ -190,7 +190,7 @@ The providePlugin function should resolve to an object containing these fields:
 <body>
 	<div id="pluginWrapper"></div>
 </body>
-<script src="main.js"></script>
+<script src="main.js" type="module"></script>
 </html>
 ```
 ```js
