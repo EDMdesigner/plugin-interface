@@ -1,4 +1,4 @@
-import PostMessageSocket from "./postMessageSocket";
+import PostMessageSocket from "./postMessageSocket.js";
 
 export default function providePlugin({ hooks = [], methods = {}, validator = null } = {}, currentWindow = window, targetWindow = window.parent) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);

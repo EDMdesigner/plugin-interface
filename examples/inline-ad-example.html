@@ -50,30 +50,38 @@
                 }
 
             
-                const sdk = await initExampleSdk();
+                const sdk = await initExampleSdk({
+                    settings: {
+                    }
+                });
 
                 const data = getNextAd();
                 const settings = { background: data.background };
-                const adPlugin = await sdk.initInlineAdPlugin({ container, data, settings, hooks: {
-                    onNextButtonClicked: async () => {
-                        //await new Promise(resolve => setTimeout(resolve, 500)); // simulate latency
+                const adPlugin = await sdk.initInlineAdPlugin({ 
+                    data, 
+                    settings, 
+                    hooks: {
+                        onNextButtonClicked: async () => {
+                            //await new Promise(resolve => setTimeout(resolve, 500)); // simulate latency
 
-                        const randAd = getNextAd();
-                        adPlugin.methods.updateSettings({ background: randAd.background });
-                        return randAd;
-                    },
-                    onReadMoreButtonClicked: async ({ id }) => {
-                        const ad = ads.find(ad => ad.id === id);
-                        return {
-                            id: ad.id,
-                            title: ad.title,
-                            description: ad.longDescription
-                        };
-                    },
-                    onClose: async () => {
-                        adPlugin.destroy();
+                            const randAd = getNextAd();
+                            adPlugin.methods.updateSettings({ background: randAd.background });
+                            return randAd;
+                        },
+                        onReadMoreButtonClicked: async ({ id }) => {
+                            const ad = ads.find(ad => ad.id === id);
+                            return {
+                                id: ad.id,
+                                title: ad.title,
+                                description: ad.longDescription
+                            };
+                        },
+                        onClose: async () => {
+                            adPlugin.destroy();
+                        }
                     }
-                }}, {
+                }, {
+                    container, 
                     beforeInit: ({ iframe }) => {
                         iframe.style.width = "200px";
                         iframe.style.height = "200px";

@@ -65,7 +65,7 @@ The `initFullscreenPlugin` function creates and iframe based on the `src` provid
 - **timeout:** this is a number in milliseconds. This defines how long should the init function wait for an answer from the providePlugin before throwing an error.
 
 ### Interface
-In the provided interface you will reach the following props:
+In the returned object you will get the following properties:
 ```js
 {
 	_container: HTMLElement,
@@ -93,10 +93,10 @@ The `show` can be called with the following parameters:
 
 ```js
 show({ x = "-100vw", y = "0px", opacity = 0.5, scale = 1, time = 500 })
-
+```
 The `show` function provides an easy way to customize your show animation. With the provided parameters, you can set the default hidden state, described by coordinates, opacity, and scale of the plugin, along with the time of the animation. When the function is called, the plugin will move to a fullscreen view from that hidden position. The animation uses the `translate3d` css function. Likewise, the `hide` function moves the plugin back to its set hidden state.
 
-The default hidden state is moved to the left, so the `show` function will move the plugin to view form the left.
+The default hidden state is moved to the left, so the `show` function will move the plugin to view form the left. See examples for more configuration.
 
 ##  Inline plugin 
 To initialize an inline plugin, you have to call the `initInlinePlugin` function with the following parameters:
@@ -181,78 +181,3 @@ The providePlugin function should resolve to an object containing these fields:
 - **settings:** The settings that were sent at the init stage
 - **hooks:** Hooks that were sent at the init stage and were filtered with the list of hooks that are accepted by the plugin
 - **terminate:** A function designed to terminate the communication between the window objects.
-
-## Example
-### Parent side
-```html
-<!-- index.html -->
-<html>
-<body>
-	<div id="pluginWrapper"></div>
-</body>
-<script src="main.js" type="module"></script>
-</html>
-```
-```js
-// main.js
-import { initFullscreenPlugin } from "@chamaileon-sdk/plugin-interface";
-const myPlugin = await initFullscreenPlugin(
-{
-	data: {},
-	settings: {
-		buttons: {
-			header: [],
-		},
-	},
-	hooks: {
-		close: () => {
-			myPlugin.hide();
-		},
-		onHeaderButtonClicked: ({ buttonId }) => {
-			console.info("Button clicked: " + buttonId);
-		},
-	},
-},
-{
-	id: "myPlugin",
-	src: "http://route/to/my/plugin/html",
-	parentElem: "#pluginWrapper",
-	beforeInit: () => {},
-	timeout: 15000,
-});
-```
-### Plugin side
-```html
-<html>
-<body>
-	I am a plugin
-</body>
-<script src="plugin.js"></script>
-</html>
-```
-```js
-// plugin.js
-import { providePlugin } from "@chamaileon-sdk/plugin-interface";
-
-function updateData(data = {}) {
-	console.log(data);
-}
-
-function updateSettings(settings = {}) {
-	console.log(settings);
-}
-
-const hooks = [
-	"onHeaderButtonClicked",
-	"close",
-];
-
-const methods = {
-	updateData,
-	updateSettings,
-};
-
-const validator = async () => {};
-
-export default async () => await providePlugin({ hooks, methods, validator });
-```
