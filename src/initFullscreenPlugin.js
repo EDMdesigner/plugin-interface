@@ -5,6 +5,7 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 	let container = document.createElement("div");
 	container.id = id;
 	container.style.position = "fixed";
+	container.style.display = "flex";
 	container.style.top = "0";
 	container.style.left = "0";
 	container.style.zIndex = 0;
