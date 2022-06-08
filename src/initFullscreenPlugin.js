@@ -70,16 +70,14 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 		container.style.zIndex = currentZIndex;
 		container.style.overflow = "hidden";
 
-		window.requestAnimationFrame(()=>{
-			container.style.transition = `transform 0s`;
+		window.requestAnimationFrame(() => {
+			container.style.transition = "transform 0s";
 			container.style.transform = `translate3d(${x}, ${y}, 0px) scale(${scale})`;
 			container.style.opacity = opacity;
-			container.style.display = "block"
-			// container.style.opacity = hiddenOpacity;
-			// container.style.transform = hiddenPosition;
-	
+			container.style.display = "block";
+
 			return new Promise((resolve) => {
-				window.requestAnimationFrame(()=>{
+				window.requestAnimationFrame(() => {
 					container.style.transition = `all ${time}ms`;
 					container.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
 					container.style.opacity = "1";
@@ -103,7 +101,7 @@ export default async function initFullscreenPlugin({ data, settings, hooks }, { 
 			container.style.transform = hiddenPosition;
 			isVisible = false;
 			if (hiddenOpacity === 0) {
-				container.style.display = "none"
+				container.style.display = "none";
 			}
 			const transitionEnded = (e) => {
 				if (e.propertyName !== "opacity" && e.propertyName !== "transform") return;

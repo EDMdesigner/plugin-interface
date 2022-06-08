@@ -11,7 +11,7 @@ export default function initExampleSdk({ settings: { splashScreenUrl } = {} }) {
 	// eslint-disable-next-line no-empty-pattern
 	function initContentEditorPlugin({ data, settings, hooks }) {
 		const src = "./plugins/content-editor.html";
-		return initFullscreenPlugin({ data, settings: { ...settings, splashScreenUrl }, hooks }, {id: "content-editor", src });
+		return initFullscreenPlugin({ data, settings: { ...settings, splashScreenUrl }, hooks }, { id: "content-editor", src });
 	}
 
 	return {

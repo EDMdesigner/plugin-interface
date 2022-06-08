@@ -142,7 +142,7 @@ The second object contains information for the library to create the iframe and 
 - **timeout:** this is a number in milliseconds. This defines how long should the init function wait for an answer from the providePlugin before throwing an error.
 
 ### Interface
-In the provided interface you will reach the following props:
+In the returned object you will get the following properties:
 ```js
 {
 	_container: HTMLElement,
@@ -181,3 +181,7 @@ The providePlugin function should resolve to an object containing these fields:
 - **settings:** The settings that were sent at the init stage
 - **hooks:** Hooks that were sent at the init stage and were filtered with the list of hooks that are accepted by the plugin
 - **terminate:** A function designed to terminate the communication between the window objects.
+
+### Example
+You can run the examples, with static server
+ static-server -c "*" -zp 10101
