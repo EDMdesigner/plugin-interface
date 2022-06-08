@@ -184,4 +184,7 @@ The providePlugin function should resolve to an object containing these fields:
 
 ### Example
 You can run the examples, with static server
- static-server -c "*" -zp 10101
+```js
+$ npm -g install static-server
+$ static-server -c "*" -zp 8080
+```
