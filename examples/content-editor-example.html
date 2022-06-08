@@ -4,10 +4,11 @@
     </head>
     <body>
         <h1>Edit content example</h1>
-        <div>Title:</div>
-        <div id="title"></div>
-        <div>Description:</div>
-        <div id="description"></div>
+        <span>Title:</span>
+        <span id="title"></span>
+        <br>
+        <span>Description:</span>
+        <span id="description"></span>
         <div id="editButtons"></div>
         <script>
             (async function() {
@@ -56,16 +57,33 @@
 
                 let animationType;
 
-                const animationTypes = ["slideFromLeft", "slideFromTop", "slideFromBottom", "slideFromRight", "fade", "scale"]
+                const animationTypes = [{
+                    label: "slideFromLeft",
+                    args: { x: "-100vw", y: "0px", opacity: 0.5, scale: 1, time: 500 }
+                },{
+                    label: "slideFromTop",
+                    args: { x: "0px", y: "-100vh", opacity: 0.5, scale: 1, time: 500 }
+                },{
+                    label: "slideFromBottom",
+                    args: { x: "0px", y: "100vh", opacity: 0.5, scale: 1, time: 500 }
+                },{
+                    label: "slideFromRight",
+                    args: { x: "100vw", y: "0px", opacity: 0.5, scale: 1, time: 500 }
+                },{
+                    label: "fade",
+                    args: { x: "0px", y: "0px", opacity: 0, scale: 1, time: 500 }
+                },{
+                    label: "scale",
+                    args: { x: "0vw", y: "0vh", opacity: 0.5, scale: 0, time: 500 }
+                }]
 
-                animationTypes.forEach((type)=>{
+                animationTypes.forEach((button)=>{
                     let btn = document.createElement("button");
-                    btn.innerHTML = type;
+                    btn.innerHTML = button.label;
                     btn.onclick = async () => {
                         contentEditorPlugin.showSplashScreen();
                         await contentEditorPlugin.methods.updateData(data);
-                        contentEditorPlugin.show(type);
-                        animationType = type;
+                        contentEditorPlugin.show(button.args);
                         await new Promise(resolve => setTimeout(resolve, 400)); // simulate latency
                         contentEditorPlugin.hideSplashScreen();
                     }

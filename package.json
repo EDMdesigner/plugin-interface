@@ -1,6 +1,6 @@
 {
 	"name": "@chamaileon-sdk/plugin-interface",
-	"version": "0.5.3",
+	"version": "0.5.4",
 	"keywords": [
 		"postMessage",
 		"interface",
