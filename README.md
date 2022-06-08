@@ -155,7 +155,7 @@ In the returned object you will get the following properties:
 - **methods:** through the methods object you can reach the plugins declared methods
 - **destroy:** this function removes the iframe from the container
 ## providePlugin
-When you plugin is loaded from the provided src, it has to call the `providePlugin` function, in order to respond to the plugin-interface initialization
+When your plugin is loaded from the provided src, your script in the iframe has to call the `providePlugin` function, in order to respond to the plugin-interface initialization
 
 ```js
 providePlugin({
