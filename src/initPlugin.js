@@ -19,7 +19,7 @@ export function createInitPlugin({ data, settings, hooks }, { container, src, be
 	return initPlugin({ data, settings, hooks }, { currentWindow: window, targetWindow: pluginIframe.contentWindow, timeout, container });
 }
 
-export default function initPlugin({ data, settings, hooks }, { currentWindow, targetWindow, timeout = 15000, container }) {
+export default function initPlugin({ data, settings, hooks }, { currentWindow, targetWindow, timeout = null, container }) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
 	messageSocket.addListener("error", payload => console.warn(payload));
@@ -31,13 +31,17 @@ export default function initPlugin({ data, settings, hooks }, { currentWindow, t
 	return new Promise((resolve, reject) => {
 		messageSocket.addListener("domReady", onDomReady, { once: true });
 
-		const timetoutID = setTimeout(() => {
-			messageSocket.terminate();
-			if (container?.remove && typeof container.remove === "function") {
-				container.remove();
-			}
-			reject(new Error("Plugin initialization failed with timeout! You can try to increase the timeout value in the plugin settings. Default value is 15000ms."));
-		}, timeout);
+		let timeoutId = null;
+
+		if (timeout) {
+			timeoutId = setTimeout(() => {
+				messageSocket.terminate();
+				if (container?.remove && typeof container.remove === "function") {
+					container.remove();
+				}
+				reject(new Error(`Plugin initialization failed with timeout! You can try to increase the timeout value in the plugin settings. Current value is ${timeout}ms.`));
+			}, timeout);
+		}
 
 		async function onDomReady() {
 			const answer = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
@@ -49,7 +53,7 @@ export default function initPlugin({ data, settings, hooks }, { currentWindow, t
 				};
 			});
 
-			clearTimeout(timetoutID);
+			clearTimeout(timeoutId);
 
 			resolve({
 				methods,
