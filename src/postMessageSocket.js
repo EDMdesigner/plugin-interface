@@ -23,7 +23,7 @@ export default class PostMessageSocket {
 		this.#listeners[type] = { callback, once };
 	}
 
-	#removeListener(type) {
+	removeListener(type) {
 		this.#listeners[type] = null;
 		delete this.#listeners[type];
 	}
@@ -114,7 +114,7 @@ export default class PostMessageSocket {
 		}
 
 		if (listener.once) {
-			this.#removeListener(message.type);
+			this.removeListener(message.type);
 		}
 	}
 

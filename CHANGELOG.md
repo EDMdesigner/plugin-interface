@@ -1,6 +1,11 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] 2022-07-05
+
+### Added
+- updateHooks functionality with 2 modes (overwrite every hook or only replace a list of hooks)
+
 ## [1.0.1] 2022-06-20
 
 ### Fixed

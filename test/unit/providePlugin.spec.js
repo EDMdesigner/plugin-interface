@@ -126,13 +126,15 @@ describe("provide plugin tests", function () {
 
 			// eslint-disable-next-line no-shadow
 			function validator({ hooks }) {
-				providedHooks.forEach((hook) => {
-					if (!hooks.includes(hook)) {
-						requiredHooks.push(hook);
+				if (hooks) {
+					providedHooks.forEach((hook) => {
+						if (!hooks.includes(hook)) {
+							requiredHooks.push(hook);
+						}
+					});
+					if (requiredHooks.length) {
+						throw new Error(`The following hooks are missing: ${requiredHooks}`);
 					}
-				});
-				if (requiredHooks.length) {
-					throw new Error(`The following hooks are missing: ${requiredHooks}`);
 				}
 			}
 
