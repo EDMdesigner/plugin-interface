@@ -10,7 +10,7 @@
 npm i @chamaileon-sdk/plugin-interface
 ```
 
-The package provides three functions, `initFullscreenPlugin`, `initInlinePlugin` and `providePlugin`. 
+The package provides three functions, `initFullscreenPlugin`, `initInlinePlugin` and `providePlugin`.
 
 A plugin initaialization consists of two parts:
 
@@ -18,7 +18,7 @@ A plugin initaialization consists of two parts:
 
 - Inside the plugin, you have to call the `providePlugin` function on opening. This function responds to the parent side init mechanisms, and returns the interface.
 
-## Fullscreen plugin 
+## Fullscreen plugin
 
 ### Initialization
 To initialize a fullscreen plugin, you have to call the `initFullscreenPlugin` function with the following parameters:
@@ -49,7 +49,7 @@ The parameters in the first object will be sent to the plugin directly.
 
 **Parameters in the second object**
 
-The `initFullscreenPlugin` function creates and iframe based on the `src` provided, and appends it to the `parentElem`. The second parameter object contains information for the library to create the iframe and append it to your application DOM. 
+The `initFullscreenPlugin` function creates and iframe based on the `src` provided, and appends it to the `parentElem`. The second parameter object contains information for the library to create the iframe and append it to your application DOM.
 
 - **id:** is the id which will represent the iframe.
 - **src:** this is the iframe source as a string.
@@ -99,7 +99,7 @@ The `show` function provides an easy way to customize your show animation. With 
 The default hidden state is moved to the left, so the `show` function will move the plugin to view form the left. See the [content editor example](examples/content-editor-example.html) for more configuration.
 
 
-##  Inline plugin 
+##  Inline plugin
 To initialize an inline plugin, you have to call the `initInlinePlugin` function with the following parameters:
 
 ```js
@@ -182,6 +182,48 @@ The providePlugin function should resolve to an object containing these fields:
 - **settings:** The settings that were sent at the init stage
 - **hooks:** Hooks that were sent at the init stage and were filtered with the list of hooks that are accepted by the plugin
 - **terminate:** A function designed to terminate the communication between the window objects.
+
+### Update hooks
+The updateHooks method can be defined in the plugin side. It can be used to update the hooks that were defined on initialization. We provide two options that you can see on the example below.
+
+Starting context:
+```js
+const onSave = () => {};
+const onDelete = () => {};
+const onFail = () => {};
+
+const activeHooks = [];
+
+const pluginInterface = await initFullscreenPlugin(...);
+// For this example let's say that we sent
+// the "onFail" hook with the init function
+
+const pluginInstance = await providePlugin({
+	hooks: ["onSave", "onDelete", "onFail" ],
+	methods: {
+		updateHooks(hooks) {
+			activeHooks = hooks;
+		},
+	},
+	validator: () => {},
+})
+
+pluginInstanceMethods.updateHooks = (hooks) => {
+	activeHooks = hooks;
+}
+```
+
+Update the hooks while keeping the already defined ones:
+```js
+await pluginInterface.methods.updateHooks({ hooks: { onSave } });
+// after the method call the activeHooks should be equal with ["onSave", "onFail", "error"];
+```
+
+Update the hooks and only keep the new ones:
+```js
+await pluginInterface.methods.updateHooks({ hooks: { onDelete }, resetHooks: true });
+// after the method call the activeHooks should be equal with ["onDelete", "error"];
+```
 
 ### Example
 
