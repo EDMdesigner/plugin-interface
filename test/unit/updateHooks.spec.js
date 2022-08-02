@@ -15,7 +15,8 @@ describe("updateHooks tests", function () {
 
 	const defaultHookFunctions = {};
 	const newHookFunctions = {};
-	const newHooksFunctions = {};
+	const newResetHookFunctions = {};
+	const newRemoveHookFunctions = {};
 
 	const defaultHooks = ["onResetButtonClicked", "onSaveButtonClicked", "onClose", "error"];
 	defaultHooks.forEach((key) => {
@@ -31,9 +32,13 @@ describe("updateHooks tests", function () {
 			return payload + "answer";
 		};
 	});
-	const newHooks = ["onSave", "error", "onFail"];
-	newHooks.forEach((key) => {
-		newHooksFunctions[key] = (payload) => {
+	const newRemoveHook = [ "onClose" ];
+	newRemoveHook.forEach((key) => {
+		newRemoveHookFunctions[key] = null;
+	});
+	const newResetHooks = ["onSave", "error", "onFail"];
+	newResetHooks.forEach((key) => {
+		newResetHookFunctions[key] = (payload) => {
 			messages.push(payload);
 			return payload + "answer";
 		};
@@ -73,7 +78,7 @@ describe("updateHooks tests", function () {
 			);
 
 			const pluginPromise = providePlugin({
-				hooks: [...defaultHooks, ...newHooks],
+				hooks: [...defaultHooks, ...newResetHooks],
 				methods: {
 					updateHooks(hooks) {
 						activeHooks = hooks;
@@ -112,15 +117,27 @@ describe("updateHooks tests", function () {
 			expect(Object.keys(activeHooks)).toStrictEqual([...defaultHooks, ...newHook]);
 		});
 
+		it("can remove a hook if it's set to null", async function () {
+			await pluginInterface.methods.updateHooks({ hooks: newRemoveHookFunctions });
+
+			await activeHooks.onResetButtonClicked("test");
+			await activeHooks.onSaveButtonClicked("test");
+			await activeHooks.onSave("test");
+
+			expect(messages).toHaveLength(3);
+
+			expect(Object.keys(activeHooks)).toStrictEqual([...defaultHooks.filter(val => val !== "onClose"), ...newHook]);
+		});
+
 		it("can update the hooks without keeping the already defined ones", async function () {
-			await pluginInterface.methods.updateHooks({ hooks: newHooksFunctions, resetHooks: true });
+			await pluginInterface.methods.updateHooks({ hooks: newResetHookFunctions, resetHooks: true });
 
 			await activeHooks.onSave("test");
 			await activeHooks.onFail("test");
 
 			expect(messages).toHaveLength(2);
 
-			expect(Object.keys(activeHooks)).toStrictEqual([ ...newHooks ]);
+			expect(Object.keys(activeHooks)).toStrictEqual([ ...newResetHooks ]);
 		});
 	});
 });
