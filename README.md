@@ -183,10 +183,10 @@ The providePlugin function should resolve to an object containing these fields:
 - **hooks:** Hooks that were sent at the init stage and were filtered with the list of hooks that are accepted by the plugin
 - **terminate:** A function designed to terminate the communication between the window objects.
 
-### Update hooks
+## Update hooks
 The updateHooks method can be defined in the plugin side. It can be used to update the hooks that were defined on initialization. We provide two options that you can see on the example below.
 
-Starting context:
+### Starting context
 ```js
 const onSave = () => {};
 const onDelete = () => {};
@@ -213,19 +213,19 @@ pluginInstanceMethods.updateHooks = (hooks) => {
 }
 ```
 
-Update the hooks while keeping the already defined ones:
+### Update the hooks while keeping the already defined ones
 ```js
 await pluginInterface.methods.updateHooks({ hooks: { onSave } });
 // after the method call the activeHooks should be equal with ["onSave", "onFail", "error"];
 ```
 
-Update the hooks and only keep the new ones:
+### Update the hooks and only keep the new ones
 ```js
 await pluginInterface.methods.updateHooks({ hooks: { onDelete }, resetHooks: true });
 // after the method call the activeHooks should be equal with ["onDelete", "error"];
 ```
 
-### Example
+## Example
 
 You can run the [examples](examples), with static server
 ```js
