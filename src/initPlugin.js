@@ -1,4 +1,5 @@
 import PostMessageSocket from "./postMessageSocket.js";
+import initUpdateHooks from "./updateHooks.js";
 
 export function createInitPlugin({ data, settings, hooks }, { container, src, beforeInit, timeout }) {
 	const pluginIframe = document.createElement("iframe");
@@ -22,11 +23,8 @@ export function createInitPlugin({ data, settings, hooks }, { container, src, be
 export default function initPlugin({ data, settings, hooks }, { currentWindow, targetWindow, timeout = null, container }) {
 	const messageSocket = new PostMessageSocket(currentWindow, targetWindow);
 
-	messageSocket.addListener("error", payload => console.warn(payload));
-
-	Object.keys(hooks).forEach((hook) => {
-		messageSocket.addListener(hook, payload => hooks[hook](payload));
-	});
+	const updateHooks = initUpdateHooks(messageSocket);
+	updateHooks({ hooks });
 
 	return new Promise((resolve, reject) => {
 		messageSocket.addListener("domReady", onDomReady, { once: true });
@@ -49,6 +47,9 @@ export default function initPlugin({ data, settings, hooks }, { currentWindow, t
 
 			answer.forEach((type) => {
 				methods[type] = async (payload) => {
+					if (type === "updateHooks") {
+						return await messageSocket.sendRequest(type, updateHooks(payload));
+					}
 					return await messageSocket.sendRequest(type, payload);
 				};
 			});
