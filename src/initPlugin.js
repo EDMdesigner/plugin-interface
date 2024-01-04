@@ -3,6 +3,7 @@ import initUpdateHooks from "./updateHooks.js";
 
 export function createInitPlugin({ data, settings, hooks }, { container, src, beforeInit, timeout }) {
 	const pluginIframe = document.createElement("iframe");
+
 	pluginIframe.src = src;
 	pluginIframe.allowFullscreen = "allowfullscreen";
 	pluginIframe.style.width = "100%";
@@ -43,6 +44,7 @@ export default function initPlugin({ data, settings, hooks }, { currentWindow, t
 
 		async function onDomReady() {
 			const answer = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
+
 			const methods = {};
 
 			answer.forEach((type) => {
