@@ -14,18 +14,18 @@ export default function providePlugin({ hooks = [], methods = {}, validator = nu
 		}
 	});
 
+	function sendDomReady() {
+		messageSocket.sendMessage("domReady", {});
+	}
+
+	if (messageSocket.getDocument().readyState === "loading") {
+		messageSocket.getDocument().addEventListener("DOMContentLoaded", sendDomReady, { once: true });
+	} else {
+		sendDomReady();
+	}
+
 	return new Promise((resolveProvidePlugin, rejectProvidePlugin) => {
 		messageSocket.addListener("init", onInit, { once: true });
-
-		function sendDomReady() {
-			messageSocket.sendMessage("domReady", {});
-		}
-
-		if (messageSocket.getDocument().readyState === "loading") {
-			messageSocket.getDocument().addEventListener("DOMContentLoaded", sendDomReady, { once: true });
-		} else {
-			sendDomReady();
-		}
 
 		// eslint-disable-next-line no-shadow
 		async function onInit({ data = null, settings = null, hooks = [] } = {}) {
