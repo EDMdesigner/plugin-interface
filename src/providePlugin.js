@@ -14,8 +14,21 @@ export default function providePlugin({ hooks = [], methods = {}, validator = nu
 		}
 	});
 
-	function sendDomReady() {
-		messageSocket.sendMessage("domReady", {});
+	let ack = false;
+
+	async function sendDomReady() {
+		messageSocket.addListener("ackDomReady", () => {
+			ack = true;
+		}, { once: true });
+
+		while (!ack) {
+			await new Promise((resolve) => {
+				messageSocket.sendMessage("domReady", {});
+				setTimeout(() => {
+					resolve();
+				}, 200);
+			});
+		}
 	}
 
 	if (messageSocket.getDocument().readyState === "loading") {
@@ -29,6 +42,7 @@ export default function providePlugin({ hooks = [], methods = {}, validator = nu
 
 		// eslint-disable-next-line no-shadow
 		async function onInit({ data = null, settings = null, hooks = [] } = {}) {
+			ack = true;
 			try {
 				if (typeof validator === "function") {
 					await validator({ data, settings });

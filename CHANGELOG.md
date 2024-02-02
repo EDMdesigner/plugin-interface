@@ -1,9 +1,9 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.1.1] 2024-01-04
+## [1.1.1] 2024-02-02
 ### Fixed
-- init event listener was not present on domReady call
+- fix async iframe/page load issue
 
 ## [1.1.0] 2022-08-02
 ### Added

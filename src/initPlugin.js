@@ -43,6 +43,7 @@ export default function initPlugin({ data, settings, hooks }, { currentWindow, t
 		}
 
 		async function onDomReady() {
+			messageSocket.sendMessage("ackDomReady", {});
 			const answer = await messageSocket.sendRequest("init", { data, settings, hooks: Object.keys(hooks) });
 
 			const methods = {};
