@@ -50,7 +50,7 @@ export default class PostMessageSocket {
 			const waitForResponse = (event) => {
 				if (event.source !== this.#targetWindow) return;
 
-				const index = this.#appliedEventListeners.findIndex(hadler => hadler._id === msgId);
+				const index = this.#appliedEventListeners.findIndex(handler => handler._id === msgId);
 				if (index === -1) return;
 				const listener = this.#appliedEventListeners[index];
 
