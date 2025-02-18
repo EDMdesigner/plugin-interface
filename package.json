@@ -1,6 +1,6 @@
 {
 	"name": "@chamaileon-sdk/plugin-interface",
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"keywords": [
 		"postMessage",
 		"interface",
@@ -30,20 +30,22 @@
 	"scripts": {
 		"build": "vite build",
 		"dev": "vite build --watch",
-		"lint": "npx eslint . --ext .js,.mjs,.cjs,.json",
-		"lint-fix": "npx eslint . --ext .js,.mjs,.cjs,.json --fix",
-		"prepare": "husky install",
+		"lint": "npx eslint . --ext .js,.mjs,.cjs,.json,.vue  --resolve-plugins-relative-to ./node_modules/@chamaileon-sdk/eslint-config",
+		"lint-fix": "npm run lint -- --fix",
+		"prepare": "husky",
 		"preview": "vite preview",
-		"test": "npm run lint && node --experimental-vm-modules node_modules/jest/bin/jest.js",
-		"test:watch": "jest --watch"
+		"serve": "vite dev --force",
+		"test": "npm run lint && npm run test:unit",
+		"test:unit": "vitest run --coverage",
+		"test:unit:watch": "vitest watch"
 	},
 	"devDependencies": {
-		"@chamaileon-sdk/eslint-config": "^2.1.9",
-		"husky": "^7.0.0",
-		"jest": "^28.0.0",
-		"jest-environment-jsdom": "^28.0.0",
-		"jsdom": "^19.0.0",
-		"vite": "^2.7.2"
+		"@chamaileon-sdk/eslint-config": "^3.0.0",
+		"@vitest/coverage-v8": "^3.0.5",
+		"jsdom": "^26.0.0",
+		"husky": "^9.1.7",
+		"vite": "^6.1.0",
+		"vitest": "^3.0.5"
 	},
 	"publishConfig": {
 		"registry": "https://registry.npmjs.org/"

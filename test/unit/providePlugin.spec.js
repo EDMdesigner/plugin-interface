@@ -161,7 +161,6 @@ describe("provide plugin tests", function () {
 					validator,
 				}, pluginIframe.contentWindow, window);
 			} catch (e) {
-				// eslint-disable-next-line jest/no-conditional-expect
 				expect(e).toStrictEqual(error);
 			}
 			await expect(methods).rejects.toStrictEqual(error);

@@ -17,4 +17,20 @@ module.exports = defineConfig({
 			},
 		},
 	},
+	test: {
+		globals: true,
+		mockClear: true,
+		environment: "jsdom",
+		silent: true,
+		setupFiles: [
+			// "./test/setupFile.js",
+		],
+		coverage: {
+			100: false,
+		},
+		// outputDiffLines: Infinity,
+		// outputDiffMaxLines: Infinity,
+		// outputDiffMaxSize: Infinity,
+		// outputTruncateLength: Infinity,
+	},
 });
