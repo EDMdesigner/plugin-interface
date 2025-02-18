@@ -1,0 +1,13 @@
+{
+	"extends": [
+		"@chamaileon-sdk/eslint-config/lib/defaults",
+		"@chamaileon-sdk/eslint-config/lib/vitest"
+	],
+	"parserOptions": {
+		"sourceType": "module",
+		"ecmaVersion": 2023
+	},
+	"env": {
+		"browser": true
+	}
+}
