@@ -42,7 +42,7 @@ jobs:
           args: --acl public-read
         env:
           SOURCE_DIR: './dist'
-          DEST_DIR: 'sdk/${{ steps.extract_version.outputs.version }}'
+          DEST_DIR: 'plugin-interface/${{ steps.extract_version.outputs.version }}'
           AWS_REGION: 'us-east-1'
           AWS_S3_BUCKET: ${{ secrets.DEPLOY_S3_BUCKET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.DEPLOY_API_KEY }}
