@@ -1,36 +1,14 @@
 // vite.config.js
-const path = require("path");
-const { defineConfig } = require("vite");
+const { defineConfig, loadEnv } = require("vite");
 
-module.exports = defineConfig({
-	// config options
-	build: {
-		outDir: "./dist",
-		target: "es2015",
-		sourcemap: true,
-		lib: {
-			entry: path.resolve(__dirname, "./src/main.js"),
-			name: "pluginInterface",
-			fileName: (format) => {
-				if (format === "umd") return "pluginInterface.cjs";
-				return "pluginInterface.js";
-			},
-		},
-	},
-	test: {
-		globals: true,
-		mockClear: true,
-		environment: "jsdom",
-		silent: true,
-		setupFiles: [
-			// "./test/setupFile.js",
-		],
-		coverage: {
-			100: false,
-		},
-		// outputDiffLines: Infinity,
-		// outputDiffMaxLines: Infinity,
-		// outputDiffMaxSize: Infinity,
-		// outputTruncateLength: Infinity,
-	},
+module.exports = defineConfig(({ mode }) => {
+	const env = loadEnv(mode, process.cwd(), "");
+	if (env?.VITE_BUILD_TARGET === "s3-umd") {
+		return require("./config/s3-umd.cjs");
+	}
+	if (env?.VITE_BUILD_TARGET === "s3-es") {
+		return require("./config/s3-es.cjs");
+	}
+
+	return require("./config/npm.cjs");
 });

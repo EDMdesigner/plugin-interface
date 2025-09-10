@@ -16,10 +16,34 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 22
+      - name: Extract version
+        id: extract_version
+        uses: Saionaro/extract-package-version@v1.0.6
       - run: npm ci
       - run: npm test
       - run: npm run build
-      - uses: JS-DevTools/npm-publish@v1
+      - name: publish to npm (master)
+        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: JS-DevTools/npm-publish@v1
         with:
           access: public
           token: ${{ secrets.NPM_TOKEN }}
+      - name: publish to npm (env)
+        if: contains(github.ref, 'environment')
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          access: public
+          token: ${{ secrets.NPM_TOKEN }}
+          tag: 'next'
+      - run: npm run build-s3
+      - name: publish to CDN (s3)
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --acl public-read
+        env:
+          SOURCE_DIR: './dist'
+          DEST_DIR: 'plugin-interface/${{ steps.extract_version.outputs.version }}'
+          AWS_REGION: 'us-east-1'
+          AWS_S3_BUCKET: ${{ secrets.DEPLOY_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.DEPLOY_API_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.DEPLOY_SECRET }}
