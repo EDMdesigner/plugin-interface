@@ -1,30 +1,34 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.1.3] 2025-08-11
+## [1.1.4] - 2025-08-11
+### Fixed
+- missing package.json build command
+
+## [1.1.3] - 2025-08-11
 ### Changed
 - Added CDN deploy
 
-## [1.1.2] 2025-02-18
+## [1.1.2] - 2025-02-18
 ### Changed
 - node version 22
 - dependency updates
 - jest to vitest
 
-## [1.1.1] 2024-02-02
+## [1.1.1] - 2024-02-02
 ### Fixed
 - fix async iframe/page load issue
 
-## [1.1.0] 2022-08-02
+## [1.1.0] - 2022-08-02
 ### Added
 - updateHooks functionality with 2 modes (overwrite every hook or only replace a list of hooks)
 
-## [1.0.1] 2022-06-20
+## [1.0.1] - 2022-06-20
 
 ### Fixed
 - Timeout should not have a default value
 
-## [1.0.0] 2022-06-08
+## [1.0.0] - 2022-06-08
 
 ### Added
 - Changelog.md file & content
