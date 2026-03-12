@@ -1,6 +1,11 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.5] - 2026-03-12
+### Changed
+- node version 24
+- dependency updates
+
 ## [1.1.4] - 2025-08-11
 ### Fixed
 - missing package.json build command
