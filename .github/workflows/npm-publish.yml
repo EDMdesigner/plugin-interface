@@ -29,7 +29,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-      - run: npm publish
+      - run: NODE_AUTH_TOKEN="" npm publish
       - run: npm run build-s3
       - name: publish to CDN (s3)
         uses: jakejarvis/s3-sync-action@master
